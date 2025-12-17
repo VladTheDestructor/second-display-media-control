@@ -30,7 +30,6 @@
         {
             components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
-            PreviewBox = new PictureBox();
             toolStrip1 = new ToolStrip();
             toolStripButton1 = new ToolStripButton();
             toolStripButton2 = new ToolStripButton();
@@ -51,19 +50,11 @@
             moveUpToolStripMenuItem = new ToolStripMenuItem();
             moveDownToolStripMenuItem = new ToolStripMenuItem();
             removeFromPlaylistToolStripMenuItem = new ToolStripMenuItem();
-            ((System.ComponentModel.ISupportInitialize)PreviewBox).BeginInit();
+            videoPanel = new Panel();
             toolStrip1.SuspendLayout();
             menuStrip1.SuspendLayout();
             FileFromListContextMenu.SuspendLayout();
             SuspendLayout();
-            // 
-            // PreviewBox
-            // 
-            PreviewBox.Location = new Point(630, 67);
-            PreviewBox.Name = "PreviewBox";
-            PreviewBox.Size = new Size(382, 230);
-            PreviewBox.TabIndex = 0;
-            PreviewBox.TabStop = false;
             // 
             // toolStrip1
             // 
@@ -173,6 +164,7 @@
             listView1.Size = new Size(247, 489);
             listView1.TabIndex = 4;
             listView1.UseCompatibleStateImageBehavior = false;
+            listView1.SelectedIndexChanged += listView1_SelectedIndexChanged_1;
             // 
             // imageList1
             // 
@@ -204,19 +196,26 @@
             removeFromPlaylistToolStripMenuItem.Size = new Size(183, 22);
             removeFromPlaylistToolStripMenuItem.Text = "remove from playlist";
             // 
+            // videoPanel
+            // 
+            videoPanel.Location = new Point(606, 44);
+            videoPanel.Name = "videoPanel";
+            videoPanel.Size = new Size(429, 249);
+            videoPanel.TabIndex = 5;
+            // 
             // MainWindow
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1119, 635);
+            Controls.Add(videoPanel);
             Controls.Add(listView1);
             Controls.Add(toolStrip1);
             Controls.Add(menuStrip1);
-            Controls.Add(PreviewBox);
             MainMenuStrip = menuStrip1;
             Name = "MainWindow";
             Text = "Form1";
-            ((System.ComponentModel.ISupportInitialize)PreviewBox).EndInit();
+            FormClosing += MainWindow_FormClosing_1;
             toolStrip1.ResumeLayout(false);
             toolStrip1.PerformLayout();
             menuStrip1.ResumeLayout(false);
@@ -227,8 +226,6 @@
         }
 
         #endregion
-
-        private PictureBox PreviewBox;
         private ToolStrip toolStrip1;
         private ToolStripButton toolStripButton1;
         private ToolStripButton toolStripButton2;
@@ -249,5 +246,6 @@
         private ToolStripMenuItem moveUpToolStripMenuItem;
         private ToolStripMenuItem moveDownToolStripMenuItem;
         private ToolStripMenuItem removeFromPlaylistToolStripMenuItem;
+        private Panel videoPanel;
     }
 }
