@@ -31,9 +31,9 @@
             components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
             toolStrip1 = new ToolStrip();
-            toolStripButton1 = new ToolStripButton();
-            toolStripButton2 = new ToolStripButton();
-            toolStripButton3 = new ToolStripButton();
+            playButton = new ToolStripButton();
+            pauseButton = new ToolStripButton();
+            stopButton = new ToolStripButton();
             menuStrip1 = new MenuStrip();
             fileToolStripMenuItem = new ToolStripMenuItem();
             newProjectToolStripMenuItem = new ToolStripMenuItem();
@@ -59,39 +59,40 @@
             // toolStrip1
             // 
             toolStrip1.Dock = DockStyle.None;
-            toolStrip1.Items.AddRange(new ToolStripItem[] { toolStripButton1, toolStripButton2, toolStripButton3 });
-            toolStrip1.Location = new Point(769, 312);
+            toolStrip1.Items.AddRange(new ToolStripItem[] { playButton, pauseButton, stopButton });
+            toolStrip1.Location = new Point(753, 354);
             toolStrip1.Name = "toolStrip1";
             toolStrip1.Size = new Size(81, 25);
             toolStrip1.TabIndex = 2;
             toolStrip1.Text = "toolStrip1";
             // 
-            // toolStripButton1
+            // playButton
             // 
-            toolStripButton1.DisplayStyle = ToolStripItemDisplayStyle.Image;
-            toolStripButton1.Image = (Image)resources.GetObject("toolStripButton1.Image");
-            toolStripButton1.ImageTransparentColor = Color.Magenta;
-            toolStripButton1.Name = "toolStripButton1";
-            toolStripButton1.Size = new Size(23, 22);
-            toolStripButton1.Text = "toolStripButton1";
+            playButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            playButton.Image = (Image)resources.GetObject("playButton.Image");
+            playButton.ImageTransparentColor = Color.Magenta;
+            playButton.Name = "playButton";
+            playButton.Size = new Size(23, 22);
+            playButton.Text = "toolStripButton1";
+            playButton.Click += toolStripButton1_Click;
             // 
-            // toolStripButton2
+            // pauseButton
             // 
-            toolStripButton2.DisplayStyle = ToolStripItemDisplayStyle.Image;
-            toolStripButton2.Image = (Image)resources.GetObject("toolStripButton2.Image");
-            toolStripButton2.ImageTransparentColor = Color.Magenta;
-            toolStripButton2.Name = "toolStripButton2";
-            toolStripButton2.Size = new Size(23, 22);
-            toolStripButton2.Text = "toolStripButton2";
+            pauseButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            pauseButton.Image = (Image)resources.GetObject("pauseButton.Image");
+            pauseButton.ImageTransparentColor = Color.Magenta;
+            pauseButton.Name = "pauseButton";
+            pauseButton.Size = new Size(23, 22);
+            pauseButton.Text = "toolStripButton2";
             // 
-            // toolStripButton3
+            // stopButton
             // 
-            toolStripButton3.DisplayStyle = ToolStripItemDisplayStyle.Image;
-            toolStripButton3.Image = (Image)resources.GetObject("toolStripButton3.Image");
-            toolStripButton3.ImageTransparentColor = Color.Magenta;
-            toolStripButton3.Name = "toolStripButton3";
-            toolStripButton3.Size = new Size(23, 22);
-            toolStripButton3.Text = "toolStripButton3";
+            stopButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            stopButton.Image = (Image)resources.GetObject("stopButton.Image");
+            stopButton.ImageTransparentColor = Color.Magenta;
+            stopButton.Name = "stopButton";
+            stopButton.Size = new Size(23, 22);
+            stopButton.Text = "toolStripButton3";
             // 
             // menuStrip1
             // 
@@ -164,7 +165,8 @@
             listView1.Size = new Size(247, 489);
             listView1.TabIndex = 4;
             listView1.UseCompatibleStateImageBehavior = false;
-            listView1.SelectedIndexChanged += listView1_SelectedIndexChanged_1;
+            listView1.SelectedIndexChanged += listView1_SelectedIndexChanged;
+            listView1.MouseDoubleClick += ListView1_MouseDoubleClick;
             // 
             // imageList1
             // 
@@ -198,9 +200,9 @@
             // 
             // videoPanel
             // 
-            videoPanel.Location = new Point(606, 44);
+            videoPanel.Location = new Point(523, 44);
             videoPanel.Name = "videoPanel";
-            videoPanel.Size = new Size(429, 249);
+            videoPanel.Size = new Size(512, 289);
             videoPanel.TabIndex = 5;
             // 
             // MainWindow
@@ -215,7 +217,7 @@
             MainMenuStrip = menuStrip1;
             Name = "MainWindow";
             Text = "Form1";
-            FormClosing += MainWindow_FormClosing_1;
+            FormClosing += MainWindow_FormClosing;
             toolStrip1.ResumeLayout(false);
             toolStrip1.PerformLayout();
             menuStrip1.ResumeLayout(false);
@@ -227,9 +229,9 @@
 
         #endregion
         private ToolStrip toolStrip1;
-        private ToolStripButton toolStripButton1;
-        private ToolStripButton toolStripButton2;
-        private ToolStripButton toolStripButton3;
+        private ToolStripButton playButton;
+        private ToolStripButton pauseButton;
+        private ToolStripButton stopButton;
         private MenuStrip menuStrip1;
         private ToolStripMenuItem fileToolStripMenuItem;
         private ToolStripMenuItem newProjectToolStripMenuItem;
