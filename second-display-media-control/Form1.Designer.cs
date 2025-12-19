@@ -51,6 +51,7 @@
             moveDownToolStripMenuItem = new ToolStripMenuItem();
             removeFromPlaylistToolStripMenuItem = new ToolStripMenuItem();
             videoPanel = new Panel();
+            autoplayButton = new ToolStripButton();
             toolStrip1.SuspendLayout();
             menuStrip1.SuspendLayout();
             FileFromListContextMenu.SuspendLayout();
@@ -59,10 +60,10 @@
             // toolStrip1
             // 
             toolStrip1.Dock = DockStyle.None;
-            toolStrip1.Items.AddRange(new ToolStripItem[] { playButton, pauseButton, stopButton });
+            toolStrip1.Items.AddRange(new ToolStripItem[] { playButton, pauseButton, stopButton, autoplayButton });
             toolStrip1.Location = new Point(753, 354);
             toolStrip1.Name = "toolStrip1";
-            toolStrip1.Size = new Size(81, 25);
+            toolStrip1.Size = new Size(135, 25);
             toolStrip1.TabIndex = 2;
             toolStrip1.Text = "toolStrip1";
             // 
@@ -74,7 +75,7 @@
             playButton.Name = "playButton";
             playButton.Size = new Size(23, 22);
             playButton.Text = "toolStripButton1";
-            playButton.Click += toolStripButton1_Click;
+            playButton.Click += playButton_Click;
             // 
             // pauseButton
             // 
@@ -84,6 +85,7 @@
             pauseButton.Name = "pauseButton";
             pauseButton.Size = new Size(23, 22);
             pauseButton.Text = "toolStripButton2";
+            pauseButton.Click += pauseButton_Click;
             // 
             // stopButton
             // 
@@ -93,6 +95,7 @@
             stopButton.Name = "stopButton";
             stopButton.Size = new Size(23, 22);
             stopButton.Text = "toolStripButton3";
+            stopButton.Click += stopButton_Click;
             // 
             // menuStrip1
             // 
@@ -205,6 +208,17 @@
             videoPanel.Size = new Size(512, 289);
             videoPanel.TabIndex = 5;
             // 
+            // autoplayButton
+            // 
+            autoplayButton.CheckOnClick = true;
+            autoplayButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            autoplayButton.Image = (Image)resources.GetObject("autoplayButton.Image");
+            autoplayButton.ImageTransparentColor = Color.Magenta;
+            autoplayButton.Name = "autoplayButton";
+            autoplayButton.Size = new Size(23, 22);
+            autoplayButton.Text = "toolStripButton1";
+            autoplayButton.Click += autoplayButton_Click;
+            // 
             // MainWindow
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -249,5 +263,6 @@
         private ToolStripMenuItem moveDownToolStripMenuItem;
         private ToolStripMenuItem removeFromPlaylistToolStripMenuItem;
         private Panel videoPanel;
+        private ToolStripButton autoplayButton;
     }
 }

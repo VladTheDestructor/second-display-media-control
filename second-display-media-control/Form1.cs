@@ -3,13 +3,15 @@ using System.IO;
 using System.Windows.Forms;
 using Vlc.DotNet.Core;
 using Vlc.DotNet.Forms;
+using System.Threading.Tasks;
 
 namespace second_display_media_control
 {
     public partial class MainWindow : Form
     {
         private VlcControl vlcPlayer;
-
+        private bool autoplayEnabled = false;
+        private int currentPlayingIndex = -1;
         public MainWindow()
         {
             InitializeComponent();
@@ -42,6 +44,7 @@ namespace second_display_media_control
                 vlcPlayer.BeginInit();
                 vlcPlayer.VlcLibDirectory = new DirectoryInfo(vlcPath);
                 vlcPlayer.EndInit();
+                vlcPlayer.EndReached += VlcPlayer_EndReached;
 
                 if (videoPanel != null)
                 {
@@ -95,6 +98,8 @@ namespace second_display_media_control
             playButton.Enabled = true;
             pauseButton.Enabled = false;
             stopButton.Enabled = false;
+            autoplayButton.Checked = false;
+            autoplayButton.Text = "Autoplay: OFF";
             playButton.ToolTipText = "Play (Space)";
             pauseButton.ToolTipText = "Pause (Space)";
             stopButton.ToolTipText = "Stop (Ctrl+S)";
@@ -116,13 +121,23 @@ namespace second_display_media_control
                 string filePath = item.Tag.ToString();
                 if (File.Exists(filePath))
                 {
+                    // Сначала останавливаем текущее воспроизведение
+                    if (vlcPlayer.IsPlaying)
+                        vlcPlayer.Stop();
+
+                    // Небольшая пауза
+                    System.Threading.Thread.Sleep(100);
+
+                    // Запускаем новое видео
                     vlcPlayer.Play(new Uri(filePath));
                     vlcPlayer.Audio.Volume = 50;
+
                     playButton.Enabled = false;
                     pauseButton.Enabled = true;
                     stopButton.Enabled = true;
                     item.Selected = true;
                     item.EnsureVisible();
+                    currentPlayingIndex = listView1.Items.IndexOf(item);
                 }
                 else
                 {
@@ -132,6 +147,7 @@ namespace second_display_media_control
             catch (Exception ex)
             {
                 MessageBox.Show($"Ошибка воспроизведения: {ex.Message}", "Ошибка");
+                currentPlayingIndex = -1;
             }
         }
 
@@ -154,74 +170,82 @@ namespace second_display_media_control
             }
         }
 
-        private void toolStripButton1_Click(object sender, EventArgs e)
-        {
-            if (vlcPlayer == null) return;
-            var button = sender as ToolStripButton;
-            switch (button?.Name)
-            {
-                case "playButton":
-                    if (!vlcPlayer.IsPlaying)
-                    {
-                        if (listView1.SelectedItems.Count > 0)
-                        {
-                            PlaySelectedFile(listView1.SelectedItems[0]);
-                        }
-                        else if (listView1.Items.Count > 0)
-                        {
-                            listView1.Items[0].Selected = true;
-                            PlaySelectedFile(listView1.Items[0]);
-                        }
-                        else
-                        {
-                            vlcPlayer.Play();
-                        }
-                    }
-                    playButton.Enabled = false;
-                    pauseButton.Enabled = true;
-                    stopButton.Enabled = true;
-                    break;
-                case "pauseButton":
-                    vlcPlayer.Pause();
-                    playButton.Enabled = true;
-                    pauseButton.Enabled = false;
-                    stopButton.Enabled = true;
-                    break;
-                case "stopButton":
-                    vlcPlayer.Stop();
-                    playButton.Enabled = true;
-                    pauseButton.Enabled = false;
-                    stopButton.Enabled = false;
-                    this.Text = "Media Player";
-                    break;
-            }
-        }
-
-        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
-        {
-            if (vlcPlayer != null)
-            {
-                if (keyData == Keys.Space)
-                {
-                    if (vlcPlayer.IsPlaying)
-                        toolStripButton1_Click(pauseButton, EventArgs.Empty);
-                    else
-                        toolStripButton1_Click(playButton, EventArgs.Empty);
-                    return true;
-                }
-                else if (keyData == (Keys.Control | Keys.S))
-                {
-                    toolStripButton1_Click(stopButton, EventArgs.Empty);
-                    return true;
-                }
-            }
-            return base.ProcessCmdKey(ref msg, keyData);
-        }
-
         private void listView1_SelectedIndexChanged(object sender, EventArgs e) { }
         private void listView1_SelectedIndexChanged_1(object sender, EventArgs e) { }
         private void MainWindow_FormClosing(object sender, FormClosingEventArgs e) { vlcPlayer?.Dispose(); }
         private void MainWindow_FormClosing_1(object sender, FormClosingEventArgs e) { }
         private void listView1_MouseDoubleClick(object sender, MouseEventArgs e) { }
+
+        private void playButton_Click(object sender, EventArgs e)
+        {
+            if (vlcPlayer == null) return;
+            if (!vlcPlayer.IsPlaying) vlcPlayer.Play();
+            playButton.Enabled = false;
+            pauseButton.Enabled = true;
+            stopButton.Enabled = true;
+        }
+
+        private void pauseButton_Click(object sender, EventArgs e)
+        {
+            if (vlcPlayer == null) return;
+            if (vlcPlayer.IsPlaying) vlcPlayer.Pause();
+            playButton.Enabled = true;
+            pauseButton.Enabled = false;
+            stopButton.Enabled = true;
+        }
+
+        private void stopButton_Click(object sender, EventArgs e)
+        {
+            if (vlcPlayer == null) return;
+            vlcPlayer.Stop();
+            playButton.Enabled = true;
+            pauseButton.Enabled = false;
+            stopButton.Enabled = false;
+            currentPlayingIndex = -1;
+        }
+
+
+        private void autoplayButton_Click(object sender, EventArgs e)
+        {
+            autoplayEnabled = autoplayButton.Checked;
+        }
+        private async void VlcPlayer_EndReached(object sender, Vlc.DotNet.Core.VlcMediaPlayerEndReachedEventArgs e)
+        {
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new Action(() => VlcPlayer_EndReached(sender, e)));
+                return;
+            }
+
+            try
+            {
+                if (autoplayEnabled && currentPlayingIndex >= 0)
+                {
+                    // Небольшая задержка перед следующим файлом
+                    await Task.Delay(500);
+
+                    int nextIndex = currentPlayingIndex + 1;
+                    if (nextIndex < listView1.Items.Count)
+                    {
+                        ListViewItem nextItem = listView1.Items[nextIndex];
+                        PlaySelectedFile(nextItem);
+                    }
+                    else
+                    {
+                        // Если файлы закончились, сбрасываем индекс
+                        currentPlayingIndex = -1;
+                    }
+                }
+                else
+                {
+                    currentPlayingIndex = -1;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка автовоспроизведения: {ex.Message}");
+                currentPlayingIndex = -1;
+            }
+        }
     }
 }
