@@ -34,6 +34,8 @@
             playButton = new ToolStripButton();
             pauseButton = new ToolStripButton();
             stopButton = new ToolStripButton();
+            autoplayButton = new ToolStripButton();
+            secondScreenButton = new ToolStripButton();
             menuStrip1 = new MenuStrip();
             fileToolStripMenuItem = new ToolStripMenuItem();
             newProjectToolStripMenuItem = new ToolStripMenuItem();
@@ -51,7 +53,6 @@
             moveDownToolStripMenuItem = new ToolStripMenuItem();
             removeFromPlaylistToolStripMenuItem = new ToolStripMenuItem();
             videoPanel = new Panel();
-            autoplayButton = new ToolStripButton();
             toolStrip1.SuspendLayout();
             menuStrip1.SuspendLayout();
             FileFromListContextMenu.SuspendLayout();
@@ -60,10 +61,10 @@
             // toolStrip1
             // 
             toolStrip1.Dock = DockStyle.None;
-            toolStrip1.Items.AddRange(new ToolStripItem[] { playButton, pauseButton, stopButton, autoplayButton });
+            toolStrip1.Items.AddRange(new ToolStripItem[] { playButton, pauseButton, stopButton, autoplayButton, secondScreenButton });
             toolStrip1.Location = new Point(753, 354);
             toolStrip1.Name = "toolStrip1";
-            toolStrip1.Size = new Size(135, 25);
+            toolStrip1.Size = new Size(158, 25);
             toolStrip1.TabIndex = 2;
             toolStrip1.Text = "toolStrip1";
             // 
@@ -96,6 +97,28 @@
             stopButton.Size = new Size(23, 22);
             stopButton.Text = "toolStripButton3";
             stopButton.Click += stopButton_Click;
+            // 
+            // autoplayButton
+            // 
+            autoplayButton.CheckOnClick = true;
+            autoplayButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            autoplayButton.Image = (Image)resources.GetObject("autoplayButton.Image");
+            autoplayButton.ImageTransparentColor = Color.Magenta;
+            autoplayButton.Name = "autoplayButton";
+            autoplayButton.Size = new Size(23, 22);
+            autoplayButton.Text = "toolStripButton1";
+            autoplayButton.Click += autoplayButton_Click;
+            // 
+            // secondScreenButton
+            // 
+            secondScreenButton.CheckOnClick = true;
+            secondScreenButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            secondScreenButton.Image = (Image)resources.GetObject("secondScreenButton.Image");
+            secondScreenButton.ImageTransparentColor = Color.Magenta;
+            secondScreenButton.Name = "secondScreenButton";
+            secondScreenButton.Size = new Size(23, 22);
+            secondScreenButton.Text = "toolStripButton1";
+            secondScreenButton.Click += secondScreenButton_Click;
             // 
             // menuStrip1
             // 
@@ -208,17 +231,6 @@
             videoPanel.Size = new Size(512, 289);
             videoPanel.TabIndex = 5;
             // 
-            // autoplayButton
-            // 
-            autoplayButton.CheckOnClick = true;
-            autoplayButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
-            autoplayButton.Image = (Image)resources.GetObject("autoplayButton.Image");
-            autoplayButton.ImageTransparentColor = Color.Magenta;
-            autoplayButton.Name = "autoplayButton";
-            autoplayButton.Size = new Size(23, 22);
-            autoplayButton.Text = "toolStripButton1";
-            autoplayButton.Click += autoplayButton_Click;
-            // 
             // MainWindow
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -230,7 +242,7 @@
             Controls.Add(menuStrip1);
             MainMenuStrip = menuStrip1;
             Name = "MainWindow";
-            Text = "Form1";
+            Text = "SDMC-Live";
             FormClosing += MainWindow_FormClosing;
             toolStrip1.ResumeLayout(false);
             toolStrip1.PerformLayout();
@@ -264,5 +276,6 @@
         private ToolStripMenuItem removeFromPlaylistToolStripMenuItem;
         private Panel videoPanel;
         private ToolStripButton autoplayButton;
+        private ToolStripButton secondScreenButton;
     }
 }

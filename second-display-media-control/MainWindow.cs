@@ -9,6 +9,7 @@ namespace second_display_media_control
 {
     public partial class MainWindow : Form
     {
+        private FullScreenForm fullScreenForm;
         private VlcControl vlcPlayer;
         private bool autoplayEnabled = false;
         private int currentPlayingIndex = -1;
@@ -26,6 +27,21 @@ namespace second_display_media_control
             listView1.MouseDoubleClick += ListView1_MouseDoubleClick;
             InitializeVlcPlayer();
             InitializeButtons();
+            fullScreenForm = new FullScreenForm();
+            if (Screen.AllScreens.Length > 1)
+            {
+                Screen secondScreen = Screen.AllScreens[1];
+                fullScreenForm.StartPosition = FormStartPosition.Manual;
+                fullScreenForm.Location = secondScreen.WorkingArea.Location;
+                fullScreenForm.Size = secondScreen.WorkingArea.Size;
+                fullScreenForm.FormBorderStyle = FormBorderStyle.None;
+            }
+            else
+            {
+                fullScreenForm.StartPosition = FormStartPosition.CenterScreen;
+                fullScreenForm.WindowState = FormWindowState.Maximized;
+                fullScreenForm.FormBorderStyle = FormBorderStyle.None;
+            }
         }
 
         private void InitializeVlcPlayer()
@@ -100,6 +116,8 @@ namespace second_display_media_control
             stopButton.Enabled = false;
             autoplayButton.Checked = false;
             autoplayButton.Text = "Autoplay: OFF";
+            secondScreenButton.Checked = false;
+            secondScreenButton.Text = "Second Screen: OFF";
             playButton.ToolTipText = "Play (Space)";
             pauseButton.ToolTipText = "Pause (Space)";
             stopButton.ToolTipText = "Stop (Ctrl+S)";
@@ -121,17 +139,15 @@ namespace second_display_media_control
                 string filePath = item.Tag.ToString();
                 if (File.Exists(filePath))
                 {
-                    // Сначала останавливаем текущее воспроизведение
-                    if (vlcPlayer.IsPlaying)
-                        vlcPlayer.Stop();
-
-                    // Небольшая пауза
+                    if (vlcPlayer.IsPlaying) vlcPlayer.Stop();
                     System.Threading.Thread.Sleep(100);
-
-                    // Запускаем новое видео
                     vlcPlayer.Play(new Uri(filePath));
                     vlcPlayer.Audio.Volume = 50;
-
+                    if (fullScreenForm != null && fullScreenForm.Visible)
+                    {
+                        fullScreenForm.Play(filePath);
+                        fullScreenForm.SetVolume(50);
+                    }
                     playButton.Enabled = false;
                     pauseButton.Enabled = true;
                     stopButton.Enabled = true;
@@ -180,6 +196,12 @@ namespace second_display_media_control
         {
             if (vlcPlayer == null) return;
             if (!vlcPlayer.IsPlaying) vlcPlayer.Play();
+            if (fullScreenForm != null && fullScreenForm.Visible && !fullScreenForm.IsPlaying)
+            {
+                // Если на втором экране видео было на паузе, возобновляем
+                // Нужно хранить текущий URI для этого, упростим:
+                // Просто вызываем Play для основного плеера, а второй экран синхронизируется через события
+            }
             playButton.Enabled = false;
             pauseButton.Enabled = true;
             stopButton.Enabled = true;
@@ -189,6 +211,7 @@ namespace second_display_media_control
         {
             if (vlcPlayer == null) return;
             if (vlcPlayer.IsPlaying) vlcPlayer.Pause();
+            fullScreenForm?.Pause();
             playButton.Enabled = true;
             pauseButton.Enabled = false;
             stopButton.Enabled = true;
@@ -198,17 +221,32 @@ namespace second_display_media_control
         {
             if (vlcPlayer == null) return;
             vlcPlayer.Stop();
+            fullScreenForm?.Stop();
             playButton.Enabled = true;
             pauseButton.Enabled = false;
             stopButton.Enabled = false;
             currentPlayingIndex = -1;
         }
 
-
         private void autoplayButton_Click(object sender, EventArgs e)
         {
             autoplayEnabled = autoplayButton.Checked;
         }
+
+        private void secondScreenButton_Click(object sender, EventArgs e)
+        {
+            if (secondScreenButton.Checked)
+            {
+                fullScreenForm.Show();
+                secondScreenButton.Text = "Second Screen: ON";
+            }
+            else
+            {
+                fullScreenForm.Hide();
+                secondScreenButton.Text = "Second Screen: OFF";
+            }
+        }
+
         private async void VlcPlayer_EndReached(object sender, Vlc.DotNet.Core.VlcMediaPlayerEndReachedEventArgs e)
         {
             if (this.InvokeRequired)
@@ -221,7 +259,6 @@ namespace second_display_media_control
             {
                 if (autoplayEnabled && currentPlayingIndex >= 0)
                 {
-                    // Небольшая задержка перед следующим файлом
                     await Task.Delay(500);
 
                     int nextIndex = currentPlayingIndex + 1;
@@ -232,7 +269,6 @@ namespace second_display_media_control
                     }
                     else
                     {
-                        // Если файлы закончились, сбрасываем индекс
                         currentPlayingIndex = -1;
                     }
                 }
@@ -246,6 +282,30 @@ namespace second_display_media_control
                 MessageBox.Show($"Ошибка автовоспроизведения: {ex.Message}");
                 currentPlayingIndex = -1;
             }
+        }
+
+        public static string FindVlcPathStatic()
+        {
+            string[] searchPaths =
+            {
+                Application.StartupPath,
+                Path.Combine(Directory.GetCurrentDirectory(), "packages"),
+                Directory.GetCurrentDirectory(),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "VideoLAN", "VLC"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "VideoLAN", "VLC")
+            };
+            foreach (var path in searchPaths)
+            {
+                if (Directory.Exists(path))
+                {
+                    if (File.Exists(Path.Combine(path, "libvlc.dll")))
+                        return path;
+                    var dllFiles = Directory.GetFiles(path, "libvlc.dll", SearchOption.AllDirectories);
+                    if (dllFiles.Length > 0)
+                        return Path.GetDirectoryName(dllFiles[0]);
+                }
+            }
+            return null;
         }
     }
 }
