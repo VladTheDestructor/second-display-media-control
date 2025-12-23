@@ -191,7 +191,6 @@
             listView1.Size = new Size(247, 489);
             listView1.TabIndex = 4;
             listView1.UseCompatibleStateImageBehavior = false;
-            listView1.SelectedIndexChanged += listView1_SelectedIndexChanged;
             listView1.MouseDoubleClick += ListView1_MouseDoubleClick;
             // 
             // imageList1
@@ -243,7 +242,7 @@
             MainMenuStrip = menuStrip1;
             Name = "MainWindow";
             Text = "SDMC-Live";
-            FormClosing += MainWindow_FormClosing;
+
             toolStrip1.ResumeLayout(false);
             toolStrip1.PerformLayout();
             menuStrip1.ResumeLayout(false);

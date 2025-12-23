@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using Vlc.DotNet.Core;
 using Vlc.DotNet.Forms;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace second_display_media_control
 {
@@ -13,6 +14,10 @@ namespace second_display_media_control
         private VlcControl vlcPlayer;
         private bool autoplayEnabled = false;
         private int currentPlayingIndex = -1;
+        private string currentPlayingUri = "";
+        private bool isPlaying = false;
+        private System.Timers.Timer syncTimer;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -27,7 +32,11 @@ namespace second_display_media_control
             listView1.MouseDoubleClick += ListView1_MouseDoubleClick;
             InitializeVlcPlayer();
             InitializeButtons();
-            fullScreenForm = new FullScreenForm();
+            InitializeSyncTimer();
+
+            fullScreenForm = new FullScreenForm(this);
+            fullScreenForm.SetMainWindow(this);
+
             if (Screen.AllScreens.Length > 1)
             {
                 Screen secondScreen = Screen.AllScreens[1];
@@ -41,6 +50,23 @@ namespace second_display_media_control
                 fullScreenForm.StartPosition = FormStartPosition.CenterScreen;
                 fullScreenForm.WindowState = FormWindowState.Maximized;
                 fullScreenForm.FormBorderStyle = FormBorderStyle.None;
+            }
+        }
+
+        private void InitializeSyncTimer()
+        {
+            syncTimer = new System.Timers.Timer(1000); // Синхронизация каждую секунду
+            syncTimer.Elapsed += SyncTimer_Elapsed;
+            syncTimer.AutoReset = true;
+            syncTimer.Enabled = false;
+        }
+
+        private void SyncTimer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            if (isPlaying && vlcPlayer != null && vlcPlayer.IsPlaying)
+            {
+                // Синхронизация состояния и позиции
+                fullScreenForm?.SyncWithMain(vlcPlayer.IsPlaying, vlcPlayer.Time);
             }
         }
 
@@ -61,6 +87,9 @@ namespace second_display_media_control
                 vlcPlayer.VlcLibDirectory = new DirectoryInfo(vlcPath);
                 vlcPlayer.EndInit();
                 vlcPlayer.EndReached += VlcPlayer_EndReached;
+
+                // ОТКЛЮЧАЕМ ЗВУК У ПРЕВЬЮ-ПЛЕЕРА
+                vlcPlayer.Audio.IsMute = true;
 
                 if (videoPanel != null)
                 {
@@ -132,22 +161,32 @@ namespace second_display_media_control
             }
         }
 
-        private void PlaySelectedFile(ListViewItem item)
+        public void PlaySelectedFile(ListViewItem item)
         {
             try
             {
                 string filePath = item.Tag.ToString();
                 if (File.Exists(filePath))
                 {
+                    currentPlayingUri = filePath;
+
+                    // Останавливаем если играет
                     if (vlcPlayer.IsPlaying) vlcPlayer.Stop();
                     System.Threading.Thread.Sleep(100);
+
+                    // Запускаем в основном плеере (без звука)
                     vlcPlayer.Play(new Uri(filePath));
-                    vlcPlayer.Audio.Volume = 50;
+                    vlcPlayer.Audio.IsMute = true; // Убеждаемся что звук отключён
+
+                    // Запускаем в полноэкранной форме если она видима (со звуком)
                     if (fullScreenForm != null && fullScreenForm.Visible)
                     {
-                        fullScreenForm.Play(filePath);
-                        fullScreenForm.SetVolume(50);
+                        fullScreenForm.PlaySync(filePath, 50); // Здесь звук на 50%
                     }
+
+                    isPlaying = true;
+                    syncTimer.Enabled = true;
+
                     playButton.Enabled = false;
                     pauseButton.Enabled = true;
                     stopButton.Enabled = true;
@@ -164,6 +203,8 @@ namespace second_display_media_control
             {
                 MessageBox.Show($"Ошибка воспроизведения: {ex.Message}", "Ошибка");
                 currentPlayingIndex = -1;
+                isPlaying = false;
+                syncTimer.Enabled = false;
             }
         }
 
@@ -188,44 +229,107 @@ namespace second_display_media_control
 
         private void listView1_SelectedIndexChanged(object sender, EventArgs e) { }
         private void listView1_SelectedIndexChanged_1(object sender, EventArgs e) { }
-        private void MainWindow_FormClosing(object sender, FormClosingEventArgs e) { vlcPlayer?.Dispose(); }
+        private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            syncTimer?.Stop();
+            syncTimer?.Dispose();
+            vlcPlayer?.Dispose();
+        }
         private void MainWindow_FormClosing_1(object sender, FormClosingEventArgs e) { }
         private void listView1_MouseDoubleClick(object sender, MouseEventArgs e) { }
 
-        private void playButton_Click(object sender, EventArgs e)
+        public void PlayBoth()
         {
             if (vlcPlayer == null) return;
-            if (!vlcPlayer.IsPlaying) vlcPlayer.Play();
-            if (fullScreenForm != null && fullScreenForm.Visible && !fullScreenForm.IsPlaying)
+
+            if (!string.IsNullOrEmpty(currentPlayingUri))
             {
-                // Если на втором экране видео было на паузе, возобновляем
-                // Нужно хранить текущий URI для этого, упростим:
-                // Просто вызываем Play для основного плеера, а второй экран синхронизируется через события
+                // Если есть текущий файл, продолжаем его
+                if (!vlcPlayer.IsPlaying)
+                {
+                    vlcPlayer.Play();
+                }
+
+                if (fullScreenForm != null && fullScreenForm.Visible)
+                {
+                    fullScreenForm.Play();
+                }
             }
+            else
+            {
+                // Если нет текущего файла, воспроизводим выбранный или первый
+                if (listView1.SelectedItems.Count > 0)
+                {
+                    PlaySelectedFile(listView1.SelectedItems[0]);
+                }
+                else if (listView1.Items.Count > 0)
+                {
+                    listView1.Items[0].Selected = true;
+                    PlaySelectedFile(listView1.Items[0]);
+                }
+            }
+
+            isPlaying = true;
+            syncTimer.Enabled = true;
             playButton.Enabled = false;
             pauseButton.Enabled = true;
             stopButton.Enabled = true;
         }
 
-        private void pauseButton_Click(object sender, EventArgs e)
+        private void playButton_Click(object sender, EventArgs e)
+        {
+            PlayBoth();
+        }
+
+        public void PauseBoth()
         {
             if (vlcPlayer == null) return;
-            if (vlcPlayer.IsPlaying) vlcPlayer.Pause();
-            fullScreenForm?.Pause();
+
+            if (vlcPlayer.IsPlaying)
+            {
+                vlcPlayer.Pause();
+            }
+
+            if (fullScreenForm != null && fullScreenForm.Visible)
+            {
+                fullScreenForm.Pause();
+            }
+
+            isPlaying = false;
+            syncTimer.Enabled = false;
             playButton.Enabled = true;
             pauseButton.Enabled = false;
             stopButton.Enabled = true;
         }
 
-        private void stopButton_Click(object sender, EventArgs e)
+        private void pauseButton_Click(object sender, EventArgs e)
+        {
+            PauseBoth();
+        }
+
+        public void StopBoth()
         {
             if (vlcPlayer == null) return;
+
             vlcPlayer.Stop();
-            fullScreenForm?.Stop();
+
+            if (fullScreenForm != null && fullScreenForm.Visible)
+            {
+                fullScreenForm.Stop();
+            }
+
+            isPlaying = false;
+            syncTimer.Enabled = false;
+            currentPlayingUri = "";
             playButton.Enabled = true;
             pauseButton.Enabled = false;
             stopButton.Enabled = false;
             currentPlayingIndex = -1;
+        }
+
+        private void stopButton_Click(object sender, EventArgs e)
+        {
+            StopBoth();
         }
 
         private void autoplayButton_Click(object sender, EventArgs e)
@@ -239,6 +343,15 @@ namespace second_display_media_control
             {
                 fullScreenForm.Show();
                 secondScreenButton.Text = "Second Screen: ON";
+
+                // Если есть текущее видео, запускаем его на втором экране
+                if (!string.IsNullOrEmpty(currentPlayingUri) && vlcPlayer != null && vlcPlayer.IsPlaying)
+                {
+                    // Передаём текущую позицию
+                    long currentTime = vlcPlayer.Time;
+                    fullScreenForm.PlaySync(currentPlayingUri, vlcPlayer.Audio.Volume);
+                    fullScreenForm.SetTime(currentTime);
+                }
             }
             else
             {
@@ -247,7 +360,7 @@ namespace second_display_media_control
             }
         }
 
-        private async void VlcPlayer_EndReached(object sender, Vlc.DotNet.Core.VlcMediaPlayerEndReachedEventArgs e)
+        private async void VlcPlayer_EndReached(object sender, VlcMediaPlayerEndReachedEventArgs e)
         {
             if (this.InvokeRequired)
             {
@@ -270,17 +383,23 @@ namespace second_display_media_control
                     else
                     {
                         currentPlayingIndex = -1;
+                        isPlaying = false;
+                        syncTimer.Enabled = false;
                     }
                 }
                 else
                 {
                     currentPlayingIndex = -1;
+                    isPlaying = false;
+                    syncTimer.Enabled = false;
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Ошибка автовоспроизведения: {ex.Message}");
                 currentPlayingIndex = -1;
+                isPlaying = false;
+                syncTimer.Enabled = false;
             }
         }
 
@@ -307,5 +426,9 @@ namespace second_display_media_control
             }
             return null;
         }
+
+        public bool IsPlaying => isPlaying;
+        public string CurrentUri => currentPlayingUri;
+        public long GetCurrentTime() => vlcPlayer?.Time ?? 0;
     }
 }
