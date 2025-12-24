@@ -62,7 +62,7 @@
             // 
             toolStrip1.Dock = DockStyle.None;
             toolStrip1.Items.AddRange(new ToolStripItem[] { playButton, pauseButton, stopButton, autoplayButton, secondScreenButton });
-            toolStrip1.Location = new Point(753, 354);
+            toolStrip1.Location = new Point(743, 321);
             toolStrip1.Name = "toolStrip1";
             toolStrip1.Size = new Size(158, 25);
             toolStrip1.TabIndex = 2;
@@ -128,6 +128,7 @@
             menuStrip1.Size = new Size(1119, 24);
             menuStrip1.TabIndex = 3;
             menuStrip1.Text = "menuStrip1";
+            menuStrip1.ItemClicked += menuStrip1_ItemClicked;
             // 
             // fileToolStripMenuItem
             // 
@@ -141,18 +142,21 @@
             newProjectToolStripMenuItem.Name = "newProjectToolStripMenuItem";
             newProjectToolStripMenuItem.Size = new Size(146, 22);
             newProjectToolStripMenuItem.Text = "New project";
+            newProjectToolStripMenuItem.Click += newProjectToolStripMenuItem_Click;
             // 
             // openProjectToolStripMenuItem
             // 
             openProjectToolStripMenuItem.Name = "openProjectToolStripMenuItem";
             openProjectToolStripMenuItem.Size = new Size(146, 22);
             openProjectToolStripMenuItem.Text = "Open project";
+            openProjectToolStripMenuItem.Click += openProjectToolStripMenuItem_Click;
             // 
             // saveProjectToolStripMenuItem
             // 
             saveProjectToolStripMenuItem.Name = "saveProjectToolStripMenuItem";
             saveProjectToolStripMenuItem.Size = new Size(146, 22);
             saveProjectToolStripMenuItem.Text = "Save project";
+            saveProjectToolStripMenuItem.Click += saveProjectToolStripMenuItem_Click;
             // 
             // importMediaToolStripMenuItem
             // 
@@ -186,9 +190,10 @@
             // 
             // listView1
             // 
-            listView1.Location = new Point(47, 63);
+            listView1.Dock = DockStyle.Left;
+            listView1.Location = new Point(0, 24);
             listView1.Name = "listView1";
-            listView1.Size = new Size(247, 489);
+            listView1.Size = new Size(496, 611);
             listView1.TabIndex = 4;
             listView1.UseCompatibleStateImageBehavior = false;
             listView1.MouseDoubleClick += ListView1_MouseDoubleClick;
@@ -210,24 +215,28 @@
             moveUpToolStripMenuItem.Name = "moveUpToolStripMenuItem";
             moveUpToolStripMenuItem.Size = new Size(183, 22);
             moveUpToolStripMenuItem.Text = "move up";
+            moveUpToolStripMenuItem.Click += moveUpToolStripMenuItem_Click;
             // 
             // moveDownToolStripMenuItem
             // 
             moveDownToolStripMenuItem.Name = "moveDownToolStripMenuItem";
             moveDownToolStripMenuItem.Size = new Size(183, 22);
             moveDownToolStripMenuItem.Text = "move down";
+            moveDownToolStripMenuItem.Click += moveDownToolStripMenuItem_Click;
             // 
             // removeFromPlaylistToolStripMenuItem
             // 
             removeFromPlaylistToolStripMenuItem.Name = "removeFromPlaylistToolStripMenuItem";
             removeFromPlaylistToolStripMenuItem.Size = new Size(183, 22);
             removeFromPlaylistToolStripMenuItem.Text = "remove from playlist";
+            removeFromPlaylistToolStripMenuItem.Click += removeFromPlaylistToolStripMenuItem_Click;
             // 
             // videoPanel
             // 
-            videoPanel.Location = new Point(523, 44);
+            videoPanel.Dock = DockStyle.Top;
+            videoPanel.Location = new Point(496, 24);
             videoPanel.Name = "videoPanel";
-            videoPanel.Size = new Size(512, 289);
+            videoPanel.Size = new Size(623, 294);
             videoPanel.TabIndex = 5;
             // 
             // MainWindow
@@ -242,7 +251,6 @@
             MainMenuStrip = menuStrip1;
             Name = "MainWindow";
             Text = "SDMC-Live";
-
             toolStrip1.ResumeLayout(false);
             toolStrip1.PerformLayout();
             menuStrip1.ResumeLayout(false);

@@ -5,6 +5,8 @@ using Vlc.DotNet.Core;
 using Vlc.DotNet.Forms;
 using System.Threading.Tasks;
 using System.Timers;
+using second_display_media_control;
+using second_display_media_control;
 
 namespace second_display_media_control
 {
@@ -30,6 +32,7 @@ namespace second_display_media_control
             listView1.Columns.Add("Path", 400);
             listView1.SmallImageList = imageList1;
             listView1.MouseDoubleClick += ListView1_MouseDoubleClick;
+            listView1.MouseClick += listView1_MouseClick;
             InitializeVlcPlayer();
             InitializeButtons();
             InitializeSyncTimer();
@@ -81,14 +84,17 @@ namespace second_display_media_control
                     return;
                 }
 
+                // ПРОСТАЯ ИНИЦИАЛИЗАЦИЯ БЕЗ ПАРАМЕТРОВ
                 vlcPlayer = new VlcControl();
                 vlcPlayer.Dock = DockStyle.Fill;
+
                 vlcPlayer.BeginInit();
                 vlcPlayer.VlcLibDirectory = new DirectoryInfo(vlcPath);
-                vlcPlayer.EndInit();
+                vlcPlayer.EndInit(); // ← здесь была ошибка
+
                 vlcPlayer.EndReached += VlcPlayer_EndReached;
 
-                // ОТКЛЮЧАЕМ ЗВУК У ПРЕВЬЮ-ПЛЕЕРА
+                // Отключаем звук ПОСЛЕ инициализации
                 vlcPlayer.Audio.IsMute = true;
 
                 if (videoPanel != null)
@@ -105,7 +111,8 @@ namespace second_display_media_control
                     panel.BringToFront();
                 }
 
-                MessageBox.Show($"VLC успешно инициализирован!\nПуть: {vlcPath}", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                // УБЕРИ ЭТО СООБЩЕНИЕ, если программа работает
+                // MessageBox.Show($"VLC успешно инициализирован!\nПуть: {vlcPath}", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
@@ -170,18 +177,24 @@ namespace second_display_media_control
                 {
                     currentPlayingUri = filePath;
 
-                    // Останавливаем если играет
                     if (vlcPlayer.IsPlaying) vlcPlayer.Stop();
                     System.Threading.Thread.Sleep(100);
 
-                    // Запускаем в основном плеере (без звука)
-                    vlcPlayer.Play(new Uri(filePath));
-                    vlcPlayer.Audio.IsMute = true; // Убеждаемся что звук отключён
+                    // === Превью БЕЗ аудио ===
+                    // Способ 1: Через параметры в Play()
+                    vlcPlayer.Play(new Uri(filePath), ":no-audio", ":audio-track-id=-1");
 
-                    // Запускаем в полноэкранной форме если она видима (со звуком)
+                    // Способ 2: Или через строку с параметрами (закомментируй Способ 1, если используешь этот)
+                    // string mediaPath = $"{filePath} :no-audio :audio-track-id=-1";
+                    // vlcPlayer.Play(new Uri(mediaPath));
+
+                    // Дополнительная страховка
+                    vlcPlayer.Audio.IsMute = true;
+
+                    // === Основной плеер СО звуком ===
                     if (fullScreenForm != null && fullScreenForm.Visible)
                     {
-                        fullScreenForm.PlaySync(filePath, 50); // Здесь звук на 50%
+                        fullScreenForm.PlaySync(filePath, 50);
                     }
 
                     isPlaying = true;
@@ -427,8 +440,216 @@ namespace second_display_media_control
             return null;
         }
 
+        private void saveProjectToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveFileDialog saveDialog = new SaveFileDialog();
+            saveDialog.Filter = "Media Project (*.sdmc)|*.sdmc";
+            saveDialog.DefaultExt = "sdmc";
+            saveDialog.InitialDirectory = ProjectManager.GetDefaultProjectPath();
+
+            if (saveDialog.ShowDialog() == DialogResult.OK)
+            {
+                ProjectData project = CreateProjectData();
+
+                if (ProjectManager.SaveProject(saveDialog.FileName, project))
+                {
+                    MessageBox.Show("Project saved successfully!", "Success",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+        }
+
+        private void openProjectToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog openDialog = new OpenFileDialog();
+            openDialog.Filter = "Media Project (*.sdmc)|*.sdmc";
+            openDialog.InitialDirectory = ProjectManager.GetDefaultProjectPath();
+
+            if (openDialog.ShowDialog() == DialogResult.OK)
+            {
+                ProjectData project = ProjectManager.LoadProject(openDialog.FileName);
+
+                if (project != null)
+                {
+                    LoadProjectData(project);
+                    MessageBox.Show("Project loaded successfully!", "Success",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+        }
+
+        private void newProjectToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var result = MessageBox.Show("Create new project? Current playlist will be cleared.",
+                "New Project", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+            if (result == DialogResult.Yes)
+            {
+                listView1.Items.Clear();
+                imageList1.Images.Clear();
+                StopBoth();
+                currentPlayingIndex = -1;
+                currentPlayingUri = "";
+            }
+        }
+
+        // Создание данных проекта из текущего состояния
+        private ProjectData CreateProjectData()
+        {
+            ProjectData project = new ProjectData
+            {
+                AutoplayEnabled = autoplayEnabled,
+                CurrentPlayingIndex = currentPlayingIndex,
+                CurrentPlayingUri = currentPlayingUri,
+                SecondScreenEnabled = (fullScreenForm != null && fullScreenForm.Visible),
+                Volume = 50 // или текущая громкость
+            };
+
+            foreach (ListViewItem item in listView1.Items)
+            {
+                project.FilePaths.Add(item.Tag.ToString());
+            }
+
+            return project;
+        }
+
+        // Загрузка данных проекта в интерфейс
+        private void LoadProjectData(ProjectData project)
+        {
+            // Очищаем текущий список
+            listView1.Items.Clear();
+            imageList1.Images.Clear();
+
+            // Загружаем файлы из проекта
+            foreach (string filePath in project.FilePaths)
+            {
+                if (File.Exists(filePath))
+                {
+                    Icon fileIcon = Icon.ExtractAssociatedIcon(filePath);
+                    imageList1.Images.Add(filePath, fileIcon);
+
+                    var item = new ListViewItem("", imageList1.Images.Count - 1);
+                    item.SubItems.Add(Path.GetFileName(filePath));
+                    item.SubItems.Add(filePath);
+                    item.Tag = filePath;
+                    listView1.Items.Add(item);
+                }
+            }
+
+            // Восстанавливаем настройки
+            autoplayEnabled = project.AutoplayEnabled;
+            autoplayButton.Checked = autoplayEnabled;
+            currentPlayingIndex = project.CurrentPlayingIndex;
+            currentPlayingUri = project.CurrentPlayingUri;
+
+            // Восстанавливаем состояние второго экрана
+            if (project.SecondScreenEnabled && fullScreenForm != null)
+            {
+                secondScreenButton.Checked = true;
+                secondScreenButton_Click(secondScreenButton, EventArgs.Empty);
+            }
+
+            // Воспроизводим сохранённый файл если он есть
+            if (!string.IsNullOrEmpty(currentPlayingUri) && File.Exists(currentPlayingUri))
+            {
+                int index = project.FilePaths.IndexOf(currentPlayingUri);
+                if (index >= 0 && index < listView1.Items.Count)
+                {
+                    listView1.Items[index].Selected = true;
+                    PlaySelectedFile(listView1.Items[index]);
+                }
+            }
+        }
+
+        // Методы контекстного меню (оставляем в MainWindow.cs)
+        private void moveUpToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (listView1.SelectedItems.Count > 0)
+            {
+                ListViewItem selectedItem = listView1.SelectedItems[0];
+                int currentIndex = selectedItem.Index;
+
+                if (currentIndex > 0)
+                {
+                    listView1.Items.RemoveAt(currentIndex);
+                    listView1.Items.Insert(currentIndex - 1, selectedItem);
+                    selectedItem.Selected = true;
+
+                    UpdateCurrentPlayingIndexAfterMove(currentIndex, -1);
+                }
+            }
+        }
+
+        private void moveDownToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (listView1.SelectedItems.Count > 0)
+            {
+                ListViewItem selectedItem = listView1.SelectedItems[0];
+                int currentIndex = selectedItem.Index;
+
+                if (currentIndex < listView1.Items.Count - 1)
+                {
+                    listView1.Items.RemoveAt(currentIndex);
+                    listView1.Items.Insert(currentIndex + 1, selectedItem);
+                    selectedItem.Selected = true;
+
+                    UpdateCurrentPlayingIndexAfterMove(currentIndex, 1);
+                }
+            }
+        }
+
+        private void UpdateCurrentPlayingIndexAfterMove(int movedIndex, int direction)
+        {
+            if (currentPlayingIndex == movedIndex)
+            {
+                currentPlayingIndex += direction;
+            }
+            else if (currentPlayingIndex == movedIndex + direction)
+            {
+                currentPlayingIndex = movedIndex;
+            }
+        }
+
+        private void removeFromPlaylistToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (listView1.SelectedItems.Count > 0)
+            {
+                ListViewItem selectedItem = listView1.SelectedItems[0];
+                int removedIndex = selectedItem.Index;
+
+                if (removedIndex == currentPlayingIndex)
+                {
+                    StopBoth();
+                    currentPlayingIndex = -1;
+                }
+                else if (currentPlayingIndex > removedIndex)
+                {
+                    currentPlayingIndex--;
+                }
+
+                listView1.Items.Remove(selectedItem);
+            }
+        }
+        private void listView1_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                var hitInfo = listView1.HitTest(e.Location);
+                if (hitInfo.Item != null)
+                {
+                    hitInfo.Item.Selected = true;
+                    FileFromListContextMenu.Show(listView1, e.Location);
+                }
+            }
+        }
+
         public bool IsPlaying => isPlaying;
         public string CurrentUri => currentPlayingUri;
         public long GetCurrentTime() => vlcPlayer?.Time ?? 0;
+
+        private void menuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        {
+
+        }
     }
 }

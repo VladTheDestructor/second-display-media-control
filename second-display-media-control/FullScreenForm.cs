@@ -32,15 +32,20 @@ namespace second_display_media_control
                 string vlcPath = MainWindow.FindVlcPathStatic();
                 if (string.IsNullOrEmpty(vlcPath)) return;
 
+                // ПРОСТАЯ ИНИЦИАЛИЗАЦИЯ
                 vlcPlayer = new VlcControl();
                 vlcPlayer.Dock = DockStyle.Fill;
+
                 vlcPlayer.BeginInit();
                 vlcPlayer.VlcLibDirectory = new DirectoryInfo(vlcPath);
                 vlcPlayer.EndInit();
 
                 videoPanel.Controls.Add(vlcPlayer);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                // Без сообщений, чтобы не мешать
+            }
         }
 
         public void PlaySync(string uri, int volume)
@@ -54,6 +59,8 @@ namespace second_display_media_control
 
                     if (vlcPlayer.IsPlaying) vlcPlayer.Stop();
                     System.Threading.Thread.Sleep(50);
+
+                    // Основной плеер - ОБЫЧНОЕ воспроизведение БЕЗ параметров отключения звука
                     vlcPlayer.Play(new Uri(uri));
                     vlcPlayer.Audio.Volume = volume;
                 }
