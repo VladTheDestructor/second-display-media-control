@@ -6,7 +6,6 @@ using Vlc.DotNet.Forms;
 using System.Threading.Tasks;
 using System.Timers;
 using second_display_media_control;
-using second_display_media_control;
 
 namespace second_display_media_control
 {
@@ -91,7 +90,6 @@ namespace second_display_media_control
                 vlcPlayer.BeginInit();
                 vlcPlayer.VlcLibDirectory = new DirectoryInfo(vlcPath);
                 vlcPlayer.EndInit(); // ← здесь была ошибка
-
                 vlcPlayer.EndReached += VlcPlayer_EndReached;
 
                 // Отключаем звук ПОСЛЕ инициализации
@@ -111,8 +109,6 @@ namespace second_display_media_control
                     panel.BringToFront();
                 }
 
-                // УБЕРИ ЭТО СООБЩЕНИЕ, если программа работает
-                // MessageBox.Show($"VLC успешно инициализирован!\nПуть: {vlcPath}", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
@@ -122,14 +118,17 @@ namespace second_display_media_control
 
         private string FindVlcPath()
         {
+            string appVlcPath = Path.Combine(Application.StartupPath, "vlc");
+            if (Directory.Exists(appVlcPath) && File.Exists(Path.Combine(appVlcPath, "libvlc.dll")))
+                return appVlcPath;
             string[] searchPaths =
             {
-                Application.StartupPath,
-                Path.Combine(Directory.GetCurrentDirectory(), "packages"),
-                Directory.GetCurrentDirectory(),
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "VideoLAN", "VLC"),
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "VideoLAN", "VLC")
-            };
+        Application.StartupPath,
+        Path.Combine(Directory.GetCurrentDirectory(), "packages"),
+        Directory.GetCurrentDirectory(),
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "VideoLAN", "VLC"),
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "VideoLAN", "VLC")
+    };
 
             foreach (var path in searchPaths)
             {
@@ -142,6 +141,8 @@ namespace second_display_media_control
                         return Path.GetDirectoryName(dllFiles[0]);
                 }
             }
+
+            // Если ничего не нашли
             return null;
         }
 
@@ -180,18 +181,11 @@ namespace second_display_media_control
                     if (vlcPlayer.IsPlaying) vlcPlayer.Stop();
                     System.Threading.Thread.Sleep(100);
 
-                    // === Превью БЕЗ аудио ===
-                    // Способ 1: Через параметры в Play()
                     vlcPlayer.Play(new Uri(filePath), ":no-audio", ":audio-track-id=-1");
 
-                    // Способ 2: Или через строку с параметрами (закомментируй Способ 1, если используешь этот)
-                    // string mediaPath = $"{filePath} :no-audio :audio-track-id=-1";
-                    // vlcPlayer.Play(new Uri(mediaPath));
-
-                    // Дополнительная страховка
                     vlcPlayer.Audio.IsMute = true;
 
-                    // === Основной плеер СО звуком ===
+                    // Основной плеер СО звуком 
                     if (fullScreenForm != null && fullScreenForm.Visible)
                     {
                         fullScreenForm.PlaySync(filePath, 50);
@@ -561,7 +555,7 @@ namespace second_display_media_control
             }
         }
 
-        // Методы контекстного меню (оставляем в MainWindow.cs)
+        // Методы контекстного меню
         private void moveUpToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (listView1.SelectedItems.Count > 0)
