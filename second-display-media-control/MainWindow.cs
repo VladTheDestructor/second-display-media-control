@@ -152,12 +152,12 @@ namespace second_display_media_control
             pauseButton.Enabled = false;
             stopButton.Enabled = false;
             autoplayButton.Checked = false;
-            autoplayButton.Text = "Autoplay: OFF";
+            autoplayButton.Text = "Автовоспроизведение";
             secondScreenButton.Checked = false;
-            secondScreenButton.Text = "Second Screen: OFF";
-            playButton.ToolTipText = "Play (Space)";
-            pauseButton.ToolTipText = "Pause (Space)";
-            stopButton.ToolTipText = "Stop (Ctrl+S)";
+            secondScreenButton.Text = "Второй экран: Выкл";
+            playButton.ToolTipText = "Воспроизвести (Space)";
+            pauseButton.ToolTipText = "Пауза (Space)";
+            stopButton.ToolTipText = "Остановить";
         }
 
         private void ListView1_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -349,7 +349,7 @@ namespace second_display_media_control
             if (secondScreenButton.Checked)
             {
                 fullScreenForm.Show();
-                secondScreenButton.Text = "Second Screen: ON";
+                secondScreenButton.Text = "Второй экран: Вкл";
 
                 // Если есть текущее видео, запускаем его на втором экране
                 if (!string.IsNullOrEmpty(currentPlayingUri) && vlcPlayer != null && vlcPlayer.IsPlaying)
@@ -363,7 +363,7 @@ namespace second_display_media_control
             else
             {
                 fullScreenForm.Hide();
-                secondScreenButton.Text = "Second Screen: OFF";
+                secondScreenButton.Text = "Второй экран: Выкл";
             }
         }
 
@@ -642,6 +642,23 @@ namespace second_display_media_control
         public long GetCurrentTime() => vlcPlayer?.Time ?? 0;
 
         private void menuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        {
+
+        }
+
+        private void volumeTrackBar_Scroll(object sender, EventArgs e)
+        {
+            int volume = volumeTrackBar.Value;
+            volumeLabel.Text = $"{volume}%";
+
+            // Устанавливаем громкость только для основного плеера
+            if (fullScreenForm != null)
+            {
+                fullScreenForm.SetVolume(volume);
+            }
+        }
+
+        private void fileToolStripMenuItem_Click(object sender, EventArgs e)
         {
 
         }

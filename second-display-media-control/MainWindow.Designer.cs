@@ -29,7 +29,6 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
             toolStrip1 = new ToolStrip();
             playButton = new ToolStripButton();
             pauseButton = new ToolStripButton();
@@ -53,9 +52,13 @@
             moveDownToolStripMenuItem = new ToolStripMenuItem();
             removeFromPlaylistToolStripMenuItem = new ToolStripMenuItem();
             videoPanel = new Panel();
+            label1 = new Label();
+            volumeTrackBar = new TrackBar();
+            volumeLabel = new Label();
             toolStrip1.SuspendLayout();
             menuStrip1.SuspendLayout();
             FileFromListContextMenu.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)volumeTrackBar).BeginInit();
             SuspendLayout();
             // 
             // toolStrip1
@@ -64,14 +67,14 @@
             toolStrip1.Items.AddRange(new ToolStripItem[] { playButton, pauseButton, stopButton, autoplayButton, secondScreenButton });
             toolStrip1.Location = new Point(743, 321);
             toolStrip1.Name = "toolStrip1";
-            toolStrip1.Size = new Size(158, 25);
+            toolStrip1.Size = new Size(127, 25);
             toolStrip1.TabIndex = 2;
             toolStrip1.Text = "toolStrip1";
             // 
             // playButton
             // 
             playButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
-            playButton.Image = (Image)resources.GetObject("playButton.Image");
+            playButton.Image = Properties.Resources.play_buttton;
             playButton.ImageTransparentColor = Color.Magenta;
             playButton.Name = "playButton";
             playButton.Size = new Size(23, 22);
@@ -81,7 +84,7 @@
             // pauseButton
             // 
             pauseButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
-            pauseButton.Image = (Image)resources.GetObject("pauseButton.Image");
+            pauseButton.Image = Properties.Resources.pause;
             pauseButton.ImageTransparentColor = Color.Magenta;
             pauseButton.Name = "pauseButton";
             pauseButton.Size = new Size(23, 22);
@@ -91,7 +94,7 @@
             // stopButton
             // 
             stopButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
-            stopButton.Image = (Image)resources.GetObject("stopButton.Image");
+            stopButton.Image = Properties.Resources.stop_button;
             stopButton.ImageTransparentColor = Color.Magenta;
             stopButton.Name = "stopButton";
             stopButton.Size = new Size(23, 22);
@@ -102,7 +105,7 @@
             // 
             autoplayButton.CheckOnClick = true;
             autoplayButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
-            autoplayButton.Image = (Image)resources.GetObject("autoplayButton.Image");
+            autoplayButton.Image = Properties.Resources.arrowhead;
             autoplayButton.ImageTransparentColor = Color.Magenta;
             autoplayButton.Name = "autoplayButton";
             autoplayButton.Size = new Size(23, 22);
@@ -113,7 +116,7 @@
             // 
             secondScreenButton.CheckOnClick = true;
             secondScreenButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
-            secondScreenButton.Image = (Image)resources.GetObject("secondScreenButton.Image");
+            secondScreenButton.Image = Properties.Resources.monitor;
             secondScreenButton.ImageTransparentColor = Color.Magenta;
             secondScreenButton.Name = "secondScreenButton";
             secondScreenButton.Size = new Size(23, 22);
@@ -134,49 +137,50 @@
             // 
             fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { newProjectToolStripMenuItem, openProjectToolStripMenuItem, saveProjectToolStripMenuItem, importMediaToolStripMenuItem, importFolderToolStripMenuItem });
             fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            fileToolStripMenuItem.Size = new Size(37, 20);
-            fileToolStripMenuItem.Text = "File";
+            fileToolStripMenuItem.Size = new Size(48, 20);
+            fileToolStripMenuItem.Text = "Файл";
+            fileToolStripMenuItem.Click += fileToolStripMenuItem_Click;
             // 
             // newProjectToolStripMenuItem
             // 
             newProjectToolStripMenuItem.Name = "newProjectToolStripMenuItem";
-            newProjectToolStripMenuItem.Size = new Size(146, 22);
-            newProjectToolStripMenuItem.Text = "New project";
+            newProjectToolStripMenuItem.Size = new Size(180, 22);
+            newProjectToolStripMenuItem.Text = "Новый проект";
             newProjectToolStripMenuItem.Click += newProjectToolStripMenuItem_Click;
             // 
             // openProjectToolStripMenuItem
             // 
             openProjectToolStripMenuItem.Name = "openProjectToolStripMenuItem";
-            openProjectToolStripMenuItem.Size = new Size(146, 22);
-            openProjectToolStripMenuItem.Text = "Open project";
+            openProjectToolStripMenuItem.Size = new Size(180, 22);
+            openProjectToolStripMenuItem.Text = "Открыть проект";
             openProjectToolStripMenuItem.Click += openProjectToolStripMenuItem_Click;
             // 
             // saveProjectToolStripMenuItem
             // 
             saveProjectToolStripMenuItem.Name = "saveProjectToolStripMenuItem";
-            saveProjectToolStripMenuItem.Size = new Size(146, 22);
-            saveProjectToolStripMenuItem.Text = "Save project";
+            saveProjectToolStripMenuItem.Size = new Size(180, 22);
+            saveProjectToolStripMenuItem.Text = "Сохранить проект";
             saveProjectToolStripMenuItem.Click += saveProjectToolStripMenuItem_Click;
             // 
             // importMediaToolStripMenuItem
             // 
             importMediaToolStripMenuItem.Name = "importMediaToolStripMenuItem";
-            importMediaToolStripMenuItem.Size = new Size(146, 22);
-            importMediaToolStripMenuItem.Text = "Import media";
+            importMediaToolStripMenuItem.Size = new Size(180, 22);
+            importMediaToolStripMenuItem.Text = "Импорт медиа";
             importMediaToolStripMenuItem.Click += importMediaToolStripMenuItem_Click;
             // 
             // importFolderToolStripMenuItem
             // 
             importFolderToolStripMenuItem.Name = "importFolderToolStripMenuItem";
-            importFolderToolStripMenuItem.Size = new Size(146, 22);
-            importFolderToolStripMenuItem.Text = "Import folder";
+            importFolderToolStripMenuItem.Size = new Size(180, 22);
+            importFolderToolStripMenuItem.Text = "Импорт папки";
             // 
             // viewToolStripMenuItem
             // 
             viewToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { secondDisplayWidowtempToolStripMenuItem });
             viewToolStripMenuItem.Name = "viewToolStripMenuItem";
-            viewToolStripMenuItem.Size = new Size(44, 20);
-            viewToolStripMenuItem.Text = "View";
+            viewToolStripMenuItem.Size = new Size(39, 20);
+            viewToolStripMenuItem.Text = "Вид";
             // 
             // secondDisplayWidowtempToolStripMenuItem
             // 
@@ -239,11 +243,41 @@
             videoPanel.Size = new Size(623, 294);
             videoPanel.TabIndex = 5;
             // 
+            // label1
+            // 
+            label1.AutoSize = true;
+            label1.Location = new Point(916, 374);
+            label1.Name = "label1";
+            label1.Size = new Size(66, 15);
+            label1.TabIndex = 6;
+            label1.Text = "Громкость";
+            // 
+            // volumeTrackBar
+            // 
+            volumeTrackBar.Location = new Point(984, 370);
+            volumeTrackBar.Maximum = 100;
+            volumeTrackBar.Name = "volumeTrackBar";
+            volumeTrackBar.Size = new Size(104, 45);
+            volumeTrackBar.TabIndex = 7;
+            volumeTrackBar.Scroll += volumeTrackBar_Scroll;
+            // 
+            // volumeLabel
+            // 
+            volumeLabel.AutoSize = true;
+            volumeLabel.Location = new Point(1078, 372);
+            volumeLabel.Name = "volumeLabel";
+            volumeLabel.Size = new Size(13, 15);
+            volumeLabel.TabIndex = 8;
+            volumeLabel.Text = "0";
+            // 
             // MainWindow
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1119, 635);
+            Controls.Add(volumeLabel);
+            Controls.Add(volumeTrackBar);
+            Controls.Add(label1);
             Controls.Add(videoPanel);
             Controls.Add(listView1);
             Controls.Add(toolStrip1);
@@ -256,6 +290,7 @@
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();
             FileFromListContextMenu.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)volumeTrackBar).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -284,5 +319,8 @@
         private Panel videoPanel;
         private ToolStripButton autoplayButton;
         private ToolStripButton secondScreenButton;
+        private Label label1;
+        private TrackBar volumeTrackBar;
+        private Label volumeLabel;
     }
 }

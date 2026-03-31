@@ -102,6 +102,16 @@ namespace second_display_media_control
             }
         }
 
+        public void SetVolume(int volume)
+        {
+            if (vlcPlayer != null)
+            {
+                // Ограничиваем значение 0-100 (VLC ожидает 0-200)
+                int vlcVolume = Math.Max(0, Math.Min(200, volume * 2));
+                vlcPlayer.Audio.Volume = vlcVolume;
+            }
+        }
+
         public void Stop()
         {
             if (vlcPlayer != null)
@@ -110,11 +120,6 @@ namespace second_display_media_control
                 currentUri = "";
                 isPaused = false;
             }
-        }
-
-        public void SetVolume(int volume)
-        {
-            if (vlcPlayer != null) vlcPlayer.Audio.Volume = volume;
         }
 
         public bool IsPlaying => vlcPlayer?.IsPlaying ?? false;
