@@ -25,6 +25,8 @@ namespace second_display_media_control
             listView1.View = View.Details;
             listView1.FullRowSelect = true;
             listView1.AllowDrop = true;
+            listView1.DragEnter += ListView1_DragEnter;
+            listView1.DragDrop += ListView1_DragDrop;
             listView1.MultiSelect = true;
             listView1.Columns.Add("Preview", 60);
             listView1.Columns.Add("Name", 200);
@@ -657,6 +659,47 @@ namespace second_display_media_control
                 fullScreenForm.SetVolume(volume);
             }
         }
+
+        private void ListView1_DragEnter(object sender, DragEventArgs e)
+        {
+            // Accept only file drops
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                e.Effect = DragDropEffects.Copy;
+            else
+                e.Effect = DragDropEffects.None;
+        }
+
+        private void ListView1_DragDrop(object sender, DragEventArgs e)
+        {
+            // Get the dropped file paths
+            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+            if (files == null) return;
+
+            foreach (string filePath in files)
+            {
+                // Check if it's a valid file (not a directory)
+                if (File.Exists(filePath))
+                {
+                    try
+                    {
+                        // Add the file to the playlist (same logic as "Import Media")
+                        Icon fileIcon = Icon.ExtractAssociatedIcon(filePath);
+                        imageList1.Images.Add(filePath, fileIcon);
+                        var item = new ListViewItem("", imageList1.Images.Count - 1);
+                        item.SubItems.Add(Path.GetFileName(filePath));
+                        item.SubItems.Add(filePath);
+                        item.Tag = filePath;
+                        listView1.Items.Add(item);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Optional: log or ignore errors
+                        Console.WriteLine($"Error adding file: {ex.Message}");
+                    }
+                }
+            }
+        }
+
 
         private void fileToolStripMenuItem_Click(object sender, EventArgs e)
         {
