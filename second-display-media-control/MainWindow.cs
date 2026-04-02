@@ -6,6 +6,9 @@ using Vlc.DotNet.Forms;
 using System.Threading.Tasks;
 using System.Timers;
 using second_display_media_control;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
 
 namespace second_display_media_control
 {
@@ -27,6 +30,9 @@ namespace second_display_media_control
             listView1.AllowDrop = true;
             listView1.DragEnter += ListView1_DragEnter;
             listView1.DragDrop += ListView1_DragDrop;
+            listView1.DragOver += ListView1_DragOver;
+            listView1.DragLeave += ListView1_DragLeave;
+            listView1.ItemDrag += ListView1_ItemDrag;
             listView1.MultiSelect = true;
             listView1.Columns.Add("Preview", 60);
             listView1.Columns.Add("Name", 200);
@@ -57,9 +63,10 @@ namespace second_display_media_control
             }
         }
 
+        
         private void InitializeSyncTimer()
         {
-            syncTimer = new System.Timers.Timer(1000); // Синхронизация каждую секунду
+            syncTimer = new System.Timers.Timer(1000);
             syncTimer.Elapsed += SyncTimer_Elapsed;
             syncTimer.AutoReset = true;
             syncTimer.Enabled = false;
@@ -91,7 +98,7 @@ namespace second_display_media_control
 
                 vlcPlayer.BeginInit();
                 vlcPlayer.VlcLibDirectory = new DirectoryInfo(vlcPath);
-                vlcPlayer.EndInit(); // ← здесь была ошибка
+                vlcPlayer.EndInit();
                 vlcPlayer.EndReached += VlcPlayer_EndReached;
 
                 // Отключаем звук ПОСЛЕ инициализации
@@ -110,7 +117,6 @@ namespace second_display_media_control
                     panel.Controls.Add(vlcPlayer);
                     panel.BringToFront();
                 }
-
             }
             catch (Exception ex)
             {
@@ -125,12 +131,12 @@ namespace second_display_media_control
                 return appVlcPath;
             string[] searchPaths =
             {
-        Application.StartupPath,
-        Path.Combine(Directory.GetCurrentDirectory(), "packages"),
-        Directory.GetCurrentDirectory(),
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "VideoLAN", "VLC"),
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "VideoLAN", "VLC")
-    };
+                Application.StartupPath,
+                Path.Combine(Directory.GetCurrentDirectory(), "packages"),
+                Directory.GetCurrentDirectory(),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "VideoLAN", "VLC"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "VideoLAN", "VLC")
+            };
 
             foreach (var path in searchPaths)
             {
@@ -143,8 +149,6 @@ namespace second_display_media_control
                         return Path.GetDirectoryName(dllFiles[0]);
                 }
             }
-
-            // Если ничего не нашли
             return null;
         }
 
@@ -253,7 +257,6 @@ namespace second_display_media_control
 
             if (!string.IsNullOrEmpty(currentPlayingUri))
             {
-                // Если есть текущий файл, продолжаем его
                 if (!vlcPlayer.IsPlaying)
                 {
                     vlcPlayer.Play();
@@ -509,10 +512,9 @@ namespace second_display_media_control
             return project;
         }
 
-        // Загрузка данных проекта в интерфейс
+        // Загрузка данных проекта
         private void LoadProjectData(ProjectData project)
         {
-            // Очищаем текущий список
             listView1.Items.Clear();
             imageList1.Images.Clear();
 
@@ -538,14 +540,12 @@ namespace second_display_media_control
             currentPlayingIndex = project.CurrentPlayingIndex;
             currentPlayingUri = project.CurrentPlayingUri;
 
-            // Восстанавливаем состояние второго экрана
             if (project.SecondScreenEnabled && fullScreenForm != null)
             {
                 secondScreenButton.Checked = true;
                 secondScreenButton_Click(secondScreenButton, EventArgs.Empty);
             }
 
-            // Воспроизводим сохранённый файл если он есть
             if (!string.IsNullOrEmpty(currentPlayingUri) && File.Exists(currentPlayingUri))
             {
                 int index = project.FilePaths.IndexOf(currentPlayingUri);
@@ -626,6 +626,7 @@ namespace second_display_media_control
                 listView1.Items.Remove(selectedItem);
             }
         }
+
         private void listView1_MouseClick(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Right)
@@ -645,7 +646,6 @@ namespace second_display_media_control
 
         private void menuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
         {
-
         }
 
         private void volumeTrackBar_Scroll(object sender, EventArgs e)
@@ -653,57 +653,210 @@ namespace second_display_media_control
             int volume = volumeTrackBar.Value;
             volumeLabel.Text = $"{volume}%";
 
-            // Устанавливаем громкость только для основного плеера
             if (fullScreenForm != null)
             {
                 fullScreenForm.SetVolume(volume);
             }
         }
 
+        // Drag & Drop
         private void ListView1_DragEnter(object sender, DragEventArgs e)
         {
-            // Accept only file drops
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
                 e.Effect = DragDropEffects.Copy;
+            else if (e.Data.GetDataPresent(typeof(ListView.SelectedListViewItemCollection)))
+                e.Effect = DragDropEffects.Move;
             else
                 e.Effect = DragDropEffects.None;
         }
 
+        private void ListView1_ItemDrag(object sender, ItemDragEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left && listView1.SelectedItems.Count > 0)
+            {
+                listView1.DoDragDrop(listView1.SelectedItems, DragDropEffects.Move);
+            }
+        }
+
+        private void ListView1_DragOver(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(typeof(ListView.SelectedListViewItemCollection)))
+            {
+                e.Effect = DragDropEffects.Move;
+                // mouse tracking
+                Point clientPoint = listView1.PointToClient(new Point(e.X, e.Y));
+                ListViewItem hoverItem = listView1.GetItemAt(clientPoint.X, clientPoint.Y);
+                int targetIndex;
+                if (hoverItem != null)
+                {
+                    targetIndex = hoverItem.Index;
+                    Rectangle itemBounds = hoverItem.GetBounds(ItemBoundsPortion.Entire);
+                    // If mouse is in lower half of the item, insert after it
+                    if (clientPoint.Y > itemBounds.Y + itemBounds.Height / 2)
+                        targetIndex++;
+                }
+                else
+                {
+                    targetIndex = listView1.Items.Count;
+                }
+
+                // place line
+                listView1.InsertionMark.Index = targetIndex;
+            }
+            else if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                e.Effect = DragDropEffects.Copy;
+            }
+            else
+            {
+                e.Effect = DragDropEffects.None;
+            }
+        }
+
+        private void ListView1_DragLeave(object sender, EventArgs e)
+        {
+            listView1.InsertionMark.Index = -1;
+        }
+
         private void ListView1_DragDrop(object sender, DragEventArgs e)
         {
-            // Get the dropped file paths
-            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-            if (files == null) return;
+            listView1.InsertionMark.Index = -1;
 
-            foreach (string filePath in files)
+            //INTERNAL REORDER
+            if (e.Data.GetDataPresent(typeof(ListView.SelectedListViewItemCollection)))
             {
-                // Check if it's a valid file (not a directory)
-                if (File.Exists(filePath))
+                Point clientPoint = listView1.PointToClient(new Point(e.X, e.Y));
+                ListViewItem targetItem = listView1.GetItemAt(clientPoint.X, clientPoint.Y);
+                int targetIndex = (targetItem != null) ? targetItem.Index : listView1.Items.Count;
+
+                // Adjust for drop after item
+                if (targetItem != null)
                 {
-                    try
+                    Rectangle itemBounds = targetItem.GetBounds(ItemBoundsPortion.Entire);
+                    if (clientPoint.Y > itemBounds.Y + itemBounds.Height / 2)
+                        targetIndex++;
+                }
+
+                targetIndex = Math.Max(0, Math.Min(targetIndex, listView1.Items.Count));
+
+                var selectedItems = (ListView.SelectedListViewItemCollection)e.Data.GetData(typeof(ListView.SelectedListViewItemCollection));
+                if (selectedItems.Count == 0) return;
+
+                List<int> originalIndices = new List<int>();
+                foreach (ListViewItem item in selectedItems)
+                {
+                    originalIndices.Add(item.Index);
+                }
+                originalIndices.Sort();
+
+                // Save the items to move
+                List<ListViewItem> itemsToMove = new List<ListViewItem>();
+                foreach (int idx in originalIndices)
+                {
+                    itemsToMove.Add(listView1.Items[idx]);
+                }
+
+                for (int i = originalIndices.Count - 1; i >= 0; i--)
+                {
+                    listView1.Items.RemoveAt(originalIndices[i]);
+                }
+
+                int removedCount = originalIndices.Count;
+                int lastRemovedIndex = originalIndices[originalIndices.Count - 1];
+                if (targetIndex > lastRemovedIndex)
+                    targetIndex -= removedCount;
+                else if (targetIndex > originalIndices[0] && targetIndex <= lastRemovedIndex)
+                    targetIndex = originalIndices[0];
+
+                for (int i = 0; i < itemsToMove.Count; i++)
+                {
+                    listView1.Items.Insert(targetIndex + i, itemsToMove[i]);
+                }
+                foreach (ListViewItem item in itemsToMove)
+                {
+                    item.Selected = true;
+                }
+                UpdateCurrentPlayingIndexAfterReorder(originalIndices, targetIndex, removedCount);
+
+                listView1.Refresh();
+            }
+            //EXTERNAL FILE DROP
+            else if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                if (files == null) return;
+
+                foreach (string filePath in files)
+                {
+                    if (File.Exists(filePath))
                     {
-                        // Add the file to the playlist (same logic as "Import Media")
-                        Icon fileIcon = Icon.ExtractAssociatedIcon(filePath);
-                        imageList1.Images.Add(filePath, fileIcon);
-                        var item = new ListViewItem("", imageList1.Images.Count - 1);
-                        item.SubItems.Add(Path.GetFileName(filePath));
-                        item.SubItems.Add(filePath);
-                        item.Tag = filePath;
-                        listView1.Items.Add(item);
-                    }
-                    catch (Exception ex)
-                    {
-                        // Optional: log or ignore errors
-                        Console.WriteLine($"Error adding file: {ex.Message}");
+                        try
+                        {
+                            Icon fileIcon = Icon.ExtractAssociatedIcon(filePath);
+                            imageList1.Images.Add(filePath, fileIcon);
+                            var item = new ListViewItem("", imageList1.Images.Count - 1);
+                            item.SubItems.Add(Path.GetFileName(filePath));
+                            item.SubItems.Add(filePath);
+                            item.Tag = filePath;
+                            listView1.Items.Add(item);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Error adding file: {ex.Message}");
+                        }
                     }
                 }
             }
         }
 
+        private void UpdateCurrentPlayingIndexAfterReorder(List<int> originalIndices, int targetIndex, int movedCount)
+        {
+            if (currentPlayingIndex < 0) return;
+            bool playingWasMoved = originalIndices.Contains(currentPlayingIndex);
+            if (playingWasMoved)
+            {
+                int offset = originalIndices.IndexOf(currentPlayingIndex);
+                currentPlayingIndex = targetIndex + offset;
+            }
+            else
+            {
+                int removedCount = movedCount;
+                int lastRemovedIndex = originalIndices[originalIndices.Count - 1];
+
+                if (currentPlayingIndex > lastRemovedIndex)
+                {
+                    currentPlayingIndex -= removedCount;
+                }
+                else if (currentPlayingIndex >= targetIndex && currentPlayingIndex < targetIndex + removedCount)
+                {
+                    if (targetIndex <= currentPlayingIndex)
+                        currentPlayingIndex += removedCount;
+                }
+                else if (currentPlayingIndex >= originalIndices[0] && currentPlayingIndex <= lastRemovedIndex)
+                {
+                    //just in case
+                }
+                else if (currentPlayingIndex >= targetIndex && !playingWasMoved)
+                {
+                    currentPlayingIndex += removedCount;
+                }
+            }
+
+            if (currentPlayingIndex >= listView1.Items.Count)
+                currentPlayingIndex = listView1.Items.Count - 1;
+
+            if (currentPlayingIndex >= 0 && currentPlayingIndex < listView1.Items.Count)
+            {
+                currentPlayingUri = listView1.Items[currentPlayingIndex].Tag.ToString();
+            }
+            else
+            {
+                currentPlayingUri = "";
+            }
+        }
 
         private void fileToolStripMenuItem_Click(object sender, EventArgs e)
         {
-
         }
     }
 }
