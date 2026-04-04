@@ -48,7 +48,7 @@ namespace second_display_media_control
             }
         }
 
-        public void PlaySync(string uri, int volume)
+        public void PlaySync(string uri, int volume, string backgroundImagePath = null)
         {
             if (vlcPlayer != null)
             {
@@ -60,11 +60,44 @@ namespace second_display_media_control
                     if (vlcPlayer.IsPlaying) vlcPlayer.Stop();
                     System.Threading.Thread.Sleep(50);
 
-                    // Основной плеер - ОБЫЧНОЕ воспроизведение БЕЗ параметров отключения звука
                     vlcPlayer.Play(new Uri(uri));
                     vlcPlayer.Audio.Volume = volume;
+
+                    // Управление фоновым изображением
+                    SetBackgroundImage(backgroundImagePath);
                 }
             }
+        }
+
+        private void SetBackgroundImage(string imagePath)
+        {
+            if (IsAudioFile(currentUri) && !string.IsNullOrEmpty(imagePath) && File.Exists(imagePath))
+            {
+                backgroundPictureBox.ImageLocation = imagePath;
+                backgroundPictureBox.Load(); // асинхронно, но можно использовать Image.FromFile
+                backgroundPictureBox.Visible = true;
+            }
+            else
+            {
+                backgroundPictureBox.Visible = false;
+                backgroundPictureBox.Image = null;
+            }
+        }
+
+        public void UpdateBackgroundImage(string imagePath)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => UpdateBackgroundImage(imagePath)));
+                return;
+            }
+            SetBackgroundImage(imagePath);
+        }
+
+        private bool IsAudioFile(string uri)
+        {
+            string ext = Path.GetExtension(uri)?.ToLower();
+            return ext == ".mp3" || ext == ".wav" || ext == ".flac" || ext == ".ogg" || ext == ".m4a";
         }
 
         public void SetTime(long time)

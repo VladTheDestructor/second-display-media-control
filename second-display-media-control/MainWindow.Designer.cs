@@ -55,6 +55,8 @@
             label1 = new Label();
             volumeTrackBar = new TrackBar();
             volumeLabel = new Label();
+            selectBackgroundImageToolStripMenuItem = new ToolStripMenuItem();
+            removeBackgroundImageToolStripMenuItem = new ToolStripMenuItem();
             toolStrip1.SuspendLayout();
             menuStrip1.SuspendLayout();
             FileFromListContextMenu.SuspendLayout();
@@ -144,35 +146,35 @@
             // newProjectToolStripMenuItem
             // 
             newProjectToolStripMenuItem.Name = "newProjectToolStripMenuItem";
-            newProjectToolStripMenuItem.Size = new Size(180, 22);
+            newProjectToolStripMenuItem.Size = new Size(174, 22);
             newProjectToolStripMenuItem.Text = "Новый проект";
             newProjectToolStripMenuItem.Click += newProjectToolStripMenuItem_Click;
             // 
             // openProjectToolStripMenuItem
             // 
             openProjectToolStripMenuItem.Name = "openProjectToolStripMenuItem";
-            openProjectToolStripMenuItem.Size = new Size(180, 22);
+            openProjectToolStripMenuItem.Size = new Size(174, 22);
             openProjectToolStripMenuItem.Text = "Открыть проект";
             openProjectToolStripMenuItem.Click += openProjectToolStripMenuItem_Click;
             // 
             // saveProjectToolStripMenuItem
             // 
             saveProjectToolStripMenuItem.Name = "saveProjectToolStripMenuItem";
-            saveProjectToolStripMenuItem.Size = new Size(180, 22);
+            saveProjectToolStripMenuItem.Size = new Size(174, 22);
             saveProjectToolStripMenuItem.Text = "Сохранить проект";
             saveProjectToolStripMenuItem.Click += saveProjectToolStripMenuItem_Click;
             // 
             // importMediaToolStripMenuItem
             // 
             importMediaToolStripMenuItem.Name = "importMediaToolStripMenuItem";
-            importMediaToolStripMenuItem.Size = new Size(180, 22);
+            importMediaToolStripMenuItem.Size = new Size(174, 22);
             importMediaToolStripMenuItem.Text = "Импорт медиа";
             importMediaToolStripMenuItem.Click += importMediaToolStripMenuItem_Click;
             // 
             // importFolderToolStripMenuItem
             // 
             importFolderToolStripMenuItem.Name = "importFolderToolStripMenuItem";
-            importFolderToolStripMenuItem.Size = new Size(180, 22);
+            importFolderToolStripMenuItem.Size = new Size(174, 22);
             importFolderToolStripMenuItem.Text = "Импорт папки";
             // 
             // viewToolStripMenuItem
@@ -210,29 +212,29 @@
             // 
             // FileFromListContextMenu
             // 
-            FileFromListContextMenu.Items.AddRange(new ToolStripItem[] { moveUpToolStripMenuItem, moveDownToolStripMenuItem, removeFromPlaylistToolStripMenuItem });
+            FileFromListContextMenu.Items.AddRange(new ToolStripItem[] { moveUpToolStripMenuItem, moveDownToolStripMenuItem, selectBackgroundImageToolStripMenuItem, removeBackgroundImageToolStripMenuItem, removeFromPlaylistToolStripMenuItem });
             FileFromListContextMenu.Name = "contextMenuStrip1";
-            FileFromListContextMenu.Size = new Size(184, 70);
+            FileFromListContextMenu.Size = new Size(256, 136);
             // 
             // moveUpToolStripMenuItem
             // 
             moveUpToolStripMenuItem.Name = "moveUpToolStripMenuItem";
-            moveUpToolStripMenuItem.Size = new Size(183, 22);
-            moveUpToolStripMenuItem.Text = "move up";
+            moveUpToolStripMenuItem.Size = new Size(255, 22);
+            moveUpToolStripMenuItem.Text = "переместить вверх";
             moveUpToolStripMenuItem.Click += moveUpToolStripMenuItem_Click;
             // 
             // moveDownToolStripMenuItem
             // 
             moveDownToolStripMenuItem.Name = "moveDownToolStripMenuItem";
-            moveDownToolStripMenuItem.Size = new Size(183, 22);
-            moveDownToolStripMenuItem.Text = "move down";
+            moveDownToolStripMenuItem.Size = new Size(255, 22);
+            moveDownToolStripMenuItem.Text = "переместить вниз";
             moveDownToolStripMenuItem.Click += moveDownToolStripMenuItem_Click;
             // 
             // removeFromPlaylistToolStripMenuItem
             // 
             removeFromPlaylistToolStripMenuItem.Name = "removeFromPlaylistToolStripMenuItem";
-            removeFromPlaylistToolStripMenuItem.Size = new Size(183, 22);
-            removeFromPlaylistToolStripMenuItem.Text = "remove from playlist";
+            removeFromPlaylistToolStripMenuItem.Size = new Size(255, 22);
+            removeFromPlaylistToolStripMenuItem.Text = "УДАЛИТЬ из плейлиста";
             removeFromPlaylistToolStripMenuItem.Click += removeFromPlaylistToolStripMenuItem_Click;
             // 
             // videoPanel
@@ -269,6 +271,18 @@
             volumeLabel.Size = new Size(13, 15);
             volumeLabel.TabIndex = 8;
             volumeLabel.Text = "0";
+            // 
+            // selectBackgroundImageToolStripMenuItem
+            // 
+            selectBackgroundImageToolStripMenuItem.Name = "selectBackgroundImageToolStripMenuItem";
+            selectBackgroundImageToolStripMenuItem.Size = new Size(255, 22);
+            selectBackgroundImageToolStripMenuItem.Text = "Добавить фоновое изображение";
+            // 
+            // removeBackgroundImageToolStripMenuItem
+            // 
+            removeBackgroundImageToolStripMenuItem.Name = "removeBackgroundImageToolStripMenuItem";
+            removeBackgroundImageToolStripMenuItem.Size = new Size(255, 22);
+            removeBackgroundImageToolStripMenuItem.Text = "Удалить изображение";
             // 
             // MainWindow
             // 
@@ -322,5 +336,7 @@
         private Label label1;
         private TrackBar volumeTrackBar;
         private Label volumeLabel;
+        private ToolStripMenuItem selectBackgroundImageToolStripMenuItem;
+        private ToolStripMenuItem removeBackgroundImageToolStripMenuItem;
     }
 }

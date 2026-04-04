@@ -61,6 +61,8 @@ namespace second_display_media_control
                 fullScreenForm.WindowState = FormWindowState.Maximized;
                 fullScreenForm.FormBorderStyle = FormBorderStyle.None;
             }
+            selectBackgroundImageToolStripMenuItem.Click += selectBackgroundImageToolStripMenuItem_Click;
+            removeBackgroundImageToolStripMenuItem.Click += removeBackgroundImageToolStripMenuItem_Click;
         }
 
         
@@ -175,69 +177,89 @@ namespace second_display_media_control
             }
         }
 
-        public void PlaySelectedFile(ListViewItem item)
+        public void PlaySelectedFile(ListViewItem listItem)
         {
-            try
+            var playlistItem = (PlaylistItem)listItem.Tag;
+            string filePath = playlistItem.FilePath;
+            if (File.Exists(filePath))
             {
-                string filePath = item.Tag.ToString();
-                if (File.Exists(filePath))
+                currentPlayingUri = filePath;
+                currentPlayingIndex = listItem.Index;
+
+                // Останавливаем текущее воспроизведение
+                if (vlcPlayer.IsPlaying) vlcPlayer.Stop();
+                System.Threading.Thread.Sleep(100);
+
+                // Воспроизведение на главном плеере (без звука)
+                vlcPlayer.Play(new Uri(filePath), ":no-audio", ":audio-track-id=-1");
+                vlcPlayer.Audio.IsMute = true;
+
+                // Воспроизведение на втором экране с передачей фонового изображения
+                if (fullScreenForm != null && fullScreenForm.Visible)
                 {
-                    currentPlayingUri = filePath;
-
-                    if (vlcPlayer.IsPlaying) vlcPlayer.Stop();
-                    System.Threading.Thread.Sleep(100);
-
-                    vlcPlayer.Play(new Uri(filePath), ":no-audio", ":audio-track-id=-1");
-
-                    vlcPlayer.Audio.IsMute = true;
-
-                    // Основной плеер СО звуком 
-                    if (fullScreenForm != null && fullScreenForm.Visible)
-                    {
-                        fullScreenForm.PlaySync(filePath, 50);
-                    }
-
-                    isPlaying = true;
-                    syncTimer.Enabled = true;
-
-                    playButton.Enabled = false;
-                    pauseButton.Enabled = true;
-                    stopButton.Enabled = true;
-                    item.Selected = true;
-                    item.EnsureVisible();
-                    currentPlayingIndex = listView1.Items.IndexOf(item);
+                    fullScreenForm.PlaySync(filePath, 50, playlistItem.BackgroundImagePath);
                 }
-                else
-                {
-                    MessageBox.Show($"Файл не найден:\n{filePath}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                }
+
+                isPlaying = true;
+                syncTimer.Enabled = true;
+
+                playButton.Enabled = false;
+                pauseButton.Enabled = true;
+                stopButton.Enabled = true;
+                listItem.Selected = true;
+                listItem.EnsureVisible();
             }
-            catch (Exception ex)
+            else
             {
-                MessageBox.Show($"Ошибка воспроизведения: {ex.Message}", "Ошибка");
-                currentPlayingIndex = -1;
-                isPlaying = false;
-                syncTimer.Enabled = false;
+                MessageBox.Show($"Файл не найден:\n{filePath}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 
         private void importMediaToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            AddMediaDialog.Filter = "Media files|*.mp4;*.avi;*.mov;*.mkv;*.jpg;*.jpeg;*.png;*.bmp";
+            AddMediaDialog.Filter = "Media files|*.mp4;*.avi;*.mov;*.mkv;*.mp3;*.wav;*.flac;*.jpg;*.jpeg;*.png;*.bmp";
             AddMediaDialog.Multiselect = true;
             if (AddMediaDialog.ShowDialog() == DialogResult.OK)
             {
                 foreach (string filePath in AddMediaDialog.FileNames)
                 {
-                    Icon fileIcon = Icon.ExtractAssociatedIcon(filePath);
-                    imageList1.Images.Add(filePath, fileIcon);
-                    var item = new ListViewItem("", imageList1.Images.Count - 1);
-                    item.SubItems.Add(Path.GetFileName(filePath));
-                    item.SubItems.Add(filePath);
-                    item.Tag = filePath;
-                    listView1.Items.Add(item);
+                    AddFileToPlaylist(filePath);
                 }
             }
+        }
+        private void AddFileToPlaylist(string filePath, string backgroundImagePath = null)
+        {
+            var item = new PlaylistItem
+            {
+                FilePath = filePath,
+                BackgroundImagePath = backgroundImagePath
+            };
+            AddFileToPlaylist(item); // calls the existing method that takes PlaylistItem
+        }
+        private void AddFileToPlaylist(PlaylistItem item)
+        {
+            // Создаём миниатюру
+            Image thumbnail;
+            if (!string.IsNullOrEmpty(item.BackgroundImagePath) && File.Exists(item.BackgroundImagePath))
+            {
+                using (var img = Image.FromFile(item.BackgroundImagePath))
+                    thumbnail = img.GetThumbnailImage(32, 32, null, IntPtr.Zero);
+            }
+            else
+            {
+                item.ThumbnailIcon = Icon.ExtractAssociatedIcon(item.FilePath);
+                thumbnail = item.ThumbnailIcon?.ToBitmap();
+            }
+
+            // Генерируем уникальный ключ, чтобы избежать конфликтов
+            string imageKey = Guid.NewGuid().ToString();
+            imageList1.Images.Add(imageKey, thumbnail);
+
+            var listItem = new ListViewItem("", imageList1.Images.Count - 1);
+            listItem.SubItems.Add(Path.GetFileName(item.FilePath));
+            listItem.SubItems.Add(item.FilePath);
+            listItem.Tag = item;
+            listView1.Items.Add(listItem);
         }
 
         private void listView1_SelectedIndexChanged(object sender, EventArgs e) { }
@@ -359,9 +381,20 @@ namespace second_display_media_control
                 // Если есть текущее видео, запускаем его на втором экране
                 if (!string.IsNullOrEmpty(currentPlayingUri) && vlcPlayer != null && vlcPlayer.IsPlaying)
                 {
-                    // Передаём текущую позицию
                     long currentTime = vlcPlayer.Time;
-                    fullScreenForm.PlaySync(currentPlayingUri, vlcPlayer.Audio.Volume);
+                    // Находим элемент плейлиста по currentPlayingUri
+                    PlaylistItem currentItem = null;
+                    foreach (ListViewItem item in listView1.Items)
+                    {
+                        var pi = (PlaylistItem)item.Tag;
+                        if (pi.FilePath == currentPlayingUri)
+                        {
+                            currentItem = pi;
+                            break;
+                        }
+                    }
+                    string bgImage = currentItem?.BackgroundImagePath;
+                    fullScreenForm.PlaySync(currentPlayingUri, vlcPlayer.Audio.Volume, bgImage);
                     fullScreenForm.SetTime(currentTime);
                 }
             }
@@ -501,14 +534,17 @@ namespace second_display_media_control
                 CurrentPlayingIndex = currentPlayingIndex,
                 CurrentPlayingUri = currentPlayingUri,
                 SecondScreenEnabled = (fullScreenForm != null && fullScreenForm.Visible),
-                Volume = 50 // или текущая громкость
+                Volume = volumeTrackBar.Value
             };
-
             foreach (ListViewItem item in listView1.Items)
             {
-                project.FilePaths.Add(item.Tag.ToString());
+                var playlistItem = (PlaylistItem)item.Tag;
+                project.Files.Add(new ProjectFileInfo
+                {
+                    FilePath = playlistItem.FilePath,
+                    BackgroundImagePath = playlistItem.BackgroundImagePath
+                });
             }
-
             return project;
         }
 
@@ -518,43 +554,37 @@ namespace second_display_media_control
             listView1.Items.Clear();
             imageList1.Images.Clear();
 
-            // Загружаем файлы из проекта
-            foreach (string filePath in project.FilePaths)
+            foreach (var fileInfo in project.Files)
             {
-                if (File.Exists(filePath))
+                if (File.Exists(fileInfo.FilePath))
                 {
-                    Icon fileIcon = Icon.ExtractAssociatedIcon(filePath);
-                    imageList1.Images.Add(filePath, fileIcon);
-
-                    var item = new ListViewItem("", imageList1.Images.Count - 1);
-                    item.SubItems.Add(Path.GetFileName(filePath));
-                    item.SubItems.Add(filePath);
-                    item.Tag = filePath;
-                    listView1.Items.Add(item);
+                    var playlistItem = new PlaylistItem
+                    {
+                        FilePath = fileInfo.FilePath,
+                        BackgroundImagePath = fileInfo.BackgroundImagePath
+                    };
+                    AddFileToPlaylist(playlistItem); // новый метод, который принимает PlaylistItem
                 }
             }
-
-            // Восстанавливаем настройки
             autoplayEnabled = project.AutoplayEnabled;
             autoplayButton.Checked = autoplayEnabled;
-            currentPlayingIndex = project.CurrentPlayingIndex;
-            currentPlayingUri = project.CurrentPlayingUri;
+            volumeTrackBar.Value = project.Volume;
+            volumeLabel.Text = $"{project.Volume}%";
+            fullScreenForm?.SetVolume(project.Volume);
 
-            if (project.SecondScreenEnabled && fullScreenForm != null)
-            {
-                secondScreenButton.Checked = true;
-                secondScreenButton_Click(secondScreenButton, EventArgs.Empty);
-            }
+            if (project.SecondScreenEnabled && !fullScreenForm.Visible)
+                secondScreenButton.Checked = true; // вызовет secondScreenButton_Click
 
-            if (!string.IsNullOrEmpty(currentPlayingUri) && File.Exists(currentPlayingUri))
+            if (!string.IsNullOrEmpty(project.CurrentPlayingUri) && File.Exists(project.CurrentPlayingUri))
             {
-                int index = project.FilePaths.IndexOf(currentPlayingUri);
+                int index = project.CurrentPlayingIndex;
                 if (index >= 0 && index < listView1.Items.Count)
                 {
                     listView1.Items[index].Selected = true;
                     PlaySelectedFile(listView1.Items[index]);
                 }
             }
+            // восстановление остальных настроек...
         }
 
         // Методы контекстного меню
@@ -790,20 +820,7 @@ namespace second_display_media_control
                 {
                     if (File.Exists(filePath))
                     {
-                        try
-                        {
-                            Icon fileIcon = Icon.ExtractAssociatedIcon(filePath);
-                            imageList1.Images.Add(filePath, fileIcon);
-                            var item = new ListViewItem("", imageList1.Images.Count - 1);
-                            item.SubItems.Add(Path.GetFileName(filePath));
-                            item.SubItems.Add(filePath);
-                            item.Tag = filePath;
-                            listView1.Items.Add(item);
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"Error adding file: {ex.Message}");
-                        }
+                        AddFileToPlaylist(filePath);
                     }
                 }
             }
@@ -847,7 +864,7 @@ namespace second_display_media_control
 
             if (currentPlayingIndex >= 0 && currentPlayingIndex < listView1.Items.Count)
             {
-                currentPlayingUri = listView1.Items[currentPlayingIndex].Tag.ToString();
+                currentPlayingUri = ((PlaylistItem)listView1.Items[currentPlayingIndex].Tag).FilePath;
             }
             else
             {
@@ -857,6 +874,96 @@ namespace second_display_media_control
 
         private void fileToolStripMenuItem_Click(object sender, EventArgs e)
         {
+        }
+
+        private void selectBackgroundImageToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (listView1.SelectedItems.Count == 0) return;
+            var item = (PlaylistItem)listView1.SelectedItems[0].Tag;
+            if (!item.IsAudioFile())
+            {
+                MessageBox.Show("Фоновое изображение можно установить только для аудиофайлов.", "Информация");
+                return;
+            }
+
+            using (OpenFileDialog ofd = new OpenFileDialog())
+            {
+                ofd.Filter = "Image files|*.jpg;*.jpeg;*.png;*.bmp";
+                ofd.Title = "Выберите фоновое изображение";
+                if (ofd.ShowDialog() == DialogResult.OK)
+                {
+                    // Копируем изображение в папку проекта (или в AppData)
+                    string targetFolder = Path.Combine(ProjectManager.GetDefaultProjectPath(), "Backgrounds");
+                    if (!Directory.Exists(targetFolder)) Directory.CreateDirectory(targetFolder);
+                    string destFile = Path.Combine(targetFolder, Guid.NewGuid().ToString() + Path.GetExtension(ofd.FileName));
+                    File.Copy(ofd.FileName, destFile, true);
+                    item.BackgroundImagePath = destFile;
+
+                    // Обновляем иконку Preview (миниатюра выбранного изображения)
+                    UpdateThumbnailForItem(listView1.SelectedItems[0], item);
+
+                    // Если этот файл сейчас воспроизводится и это аудио – обновляем фон на втором экране
+                    if (currentPlayingUri == item.FilePath && fullScreenForm != null && fullScreenForm.Visible)
+                    {
+                        fullScreenForm.UpdateBackgroundImage(item.BackgroundImagePath);
+                    }
+                }
+            }
+        }
+
+        private void removeBackgroundImageToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (listView1.SelectedItems.Count == 0) return;
+            var item = (PlaylistItem)listView1.SelectedItems[0].Tag;
+            if (item.BackgroundImagePath != null)
+            {
+                // Можно удалить файл изображения (опционально)
+                // File.Delete(item.BackgroundImagePath);
+                item.BackgroundImagePath = null;
+                // Восстанавливаем стандартную иконку
+                item.ThumbnailIcon = Icon.ExtractAssociatedIcon(item.FilePath);
+                UpdateThumbnailForItem(listView1.SelectedItems[0], item);
+
+                if (currentPlayingUri == item.FilePath && fullScreenForm != null && fullScreenForm.Visible)
+                {
+                    fullScreenForm.UpdateBackgroundImage(null);
+                }
+            }
+        }
+
+        private void UpdateThumbnailForItem(ListViewItem listItem, PlaylistItem playlistItem)
+        {
+            Image thumbnail = null;
+            try
+            {
+                if (!string.IsNullOrEmpty(playlistItem.BackgroundImagePath) && File.Exists(playlistItem.BackgroundImagePath))
+                {
+                    using (var img = Image.FromFile(playlistItem.BackgroundImagePath))
+                        thumbnail = img.GetThumbnailImage(32, 32, null, IntPtr.Zero);
+                }
+                else
+                {
+                    playlistItem.ThumbnailIcon = Icon.ExtractAssociatedIcon(playlistItem.FilePath);
+                    thumbnail = playlistItem.ThumbnailIcon?.ToBitmap();
+                }
+
+                if (thumbnail != null)
+                {
+                    string key = playlistItem.FilePath;
+                    // Удаляем старое изображение, если оно есть
+                    if (imageList1.Images.ContainsKey(key))
+                        imageList1.Images.RemoveByKey(key);
+                    // Добавляем новое
+                    imageList1.Images.Add(key, thumbnail);
+                    // Обновляем ImageIndex у элемента списка
+                    listItem.ImageIndex = imageList1.Images.IndexOfKey(key);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Логирование при необходимости
+                Console.WriteLine($"Ошибка обновления миниатюры: {ex.Message}");
+            }
         }
     }
 }
