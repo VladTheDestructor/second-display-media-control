@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
             toolStrip1 = new ToolStrip();
             playButton = new ToolStripButton();
             pauseButton = new ToolStripButton();
@@ -50,13 +51,15 @@
             FileFromListContextMenu = new ContextMenuStrip(components);
             moveUpToolStripMenuItem = new ToolStripMenuItem();
             moveDownToolStripMenuItem = new ToolStripMenuItem();
+            selectBackgroundImageToolStripMenuItem = new ToolStripMenuItem();
+            removeBackgroundImageToolStripMenuItem = new ToolStripMenuItem();
             removeFromPlaylistToolStripMenuItem = new ToolStripMenuItem();
             videoPanel = new Panel();
             label1 = new Label();
             volumeTrackBar = new TrackBar();
             volumeLabel = new Label();
-            selectBackgroundImageToolStripMenuItem = new ToolStripMenuItem();
-            removeBackgroundImageToolStripMenuItem = new ToolStripMenuItem();
+            prevButton = new ToolStripButton();
+            nextButton = new ToolStripButton();
             toolStrip1.SuspendLayout();
             menuStrip1.SuspendLayout();
             FileFromListContextMenu.SuspendLayout();
@@ -66,10 +69,10 @@
             // toolStrip1
             // 
             toolStrip1.Dock = DockStyle.None;
-            toolStrip1.Items.AddRange(new ToolStripItem[] { playButton, pauseButton, stopButton, autoplayButton, secondScreenButton });
+            toolStrip1.Items.AddRange(new ToolStripItem[] { prevButton, nextButton, playButton, pauseButton, stopButton, autoplayButton, secondScreenButton });
             toolStrip1.Location = new Point(743, 321);
             toolStrip1.Name = "toolStrip1";
-            toolStrip1.Size = new Size(127, 25);
+            toolStrip1.Size = new Size(204, 25);
             toolStrip1.TabIndex = 2;
             toolStrip1.Text = "toolStrip1";
             // 
@@ -214,7 +217,7 @@
             // 
             FileFromListContextMenu.Items.AddRange(new ToolStripItem[] { moveUpToolStripMenuItem, moveDownToolStripMenuItem, selectBackgroundImageToolStripMenuItem, removeBackgroundImageToolStripMenuItem, removeFromPlaylistToolStripMenuItem });
             FileFromListContextMenu.Name = "contextMenuStrip1";
-            FileFromListContextMenu.Size = new Size(256, 136);
+            FileFromListContextMenu.Size = new Size(256, 114);
             // 
             // moveUpToolStripMenuItem
             // 
@@ -229,6 +232,18 @@
             moveDownToolStripMenuItem.Size = new Size(255, 22);
             moveDownToolStripMenuItem.Text = "переместить вниз";
             moveDownToolStripMenuItem.Click += moveDownToolStripMenuItem_Click;
+            // 
+            // selectBackgroundImageToolStripMenuItem
+            // 
+            selectBackgroundImageToolStripMenuItem.Name = "selectBackgroundImageToolStripMenuItem";
+            selectBackgroundImageToolStripMenuItem.Size = new Size(255, 22);
+            selectBackgroundImageToolStripMenuItem.Text = "Добавить фоновое изображение";
+            // 
+            // removeBackgroundImageToolStripMenuItem
+            // 
+            removeBackgroundImageToolStripMenuItem.Name = "removeBackgroundImageToolStripMenuItem";
+            removeBackgroundImageToolStripMenuItem.Size = new Size(255, 22);
+            removeBackgroundImageToolStripMenuItem.Text = "Удалить изображение";
             // 
             // removeFromPlaylistToolStripMenuItem
             // 
@@ -272,17 +287,25 @@
             volumeLabel.TabIndex = 8;
             volumeLabel.Text = "0";
             // 
-            // selectBackgroundImageToolStripMenuItem
+            // prevButton
             // 
-            selectBackgroundImageToolStripMenuItem.Name = "selectBackgroundImageToolStripMenuItem";
-            selectBackgroundImageToolStripMenuItem.Size = new Size(255, 22);
-            selectBackgroundImageToolStripMenuItem.Text = "Добавить фоновое изображение";
+            prevButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            prevButton.Image = (Image)resources.GetObject("prevButton.Image");
+            prevButton.ImageTransparentColor = Color.Magenta;
+            prevButton.Name = "prevButton";
+            prevButton.Size = new Size(23, 22);
+            prevButton.Text = "prevButton";
+            prevButton.Click += prevButton_Click;
             // 
-            // removeBackgroundImageToolStripMenuItem
+            // nextButton
             // 
-            removeBackgroundImageToolStripMenuItem.Name = "removeBackgroundImageToolStripMenuItem";
-            removeBackgroundImageToolStripMenuItem.Size = new Size(255, 22);
-            removeBackgroundImageToolStripMenuItem.Text = "Удалить изображение";
+            nextButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            nextButton.Image = (Image)resources.GetObject("nextButton.Image");
+            nextButton.ImageTransparentColor = Color.Magenta;
+            nextButton.Name = "nextButton";
+            nextButton.Size = new Size(23, 22);
+            nextButton.Text = "nextButton";
+            nextButton.Click += nextButton_Click;
             // 
             // MainWindow
             // 
@@ -338,5 +361,7 @@
         private Label volumeLabel;
         private ToolStripMenuItem selectBackgroundImageToolStripMenuItem;
         private ToolStripMenuItem removeBackgroundImageToolStripMenuItem;
+        private ToolStripButton prevButton;
+        private ToolStripButton nextButton;
     }
 }

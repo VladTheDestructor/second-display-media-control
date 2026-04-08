@@ -34,9 +34,9 @@ namespace second_display_media_control
             listView1.DragLeave += ListView1_DragLeave;
             listView1.ItemDrag += ListView1_ItemDrag;
             listView1.MultiSelect = true;
-            listView1.Columns.Add("Preview", 60);
-            listView1.Columns.Add("Name", 200);
-            listView1.Columns.Add("Path", 400);
+            listView1.Columns.Add("Предпросмотр", 60);
+            listView1.Columns.Add("Имя", 200);
+            listView1.Columns.Add("Путь", 400);
             listView1.SmallImageList = imageList1;
             listView1.MouseDoubleClick += ListView1_MouseDoubleClick;
             listView1.MouseClick += listView1_MouseClick;
@@ -65,7 +65,7 @@ namespace second_display_media_control
             removeBackgroundImageToolStripMenuItem.Click += removeBackgroundImageToolStripMenuItem_Click;
         }
 
-        
+
         private void InitializeSyncTimer()
         {
             syncTimer = new System.Timers.Timer(1000);
@@ -166,6 +166,16 @@ namespace second_display_media_control
             playButton.ToolTipText = "Воспроизвести (Space)";
             pauseButton.ToolTipText = "Пауза (Space)";
             stopButton.ToolTipText = "Остановить";
+            nextButton.Enabled = false;
+            nextButton.ToolTipText = "Следующее медиа";
+            prevButton.Enabled = false;
+            prevButton.ToolTipText = "Предыдущее медиа";
+            if (prevButton != null && nextButton != null)
+            {
+                prevButton.Click += prevButton_Click;
+                nextButton.Click += nextButton_Click;
+                UpdateNavigationButtonsState();
+            }
         }
 
         private void ListView1_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -208,6 +218,7 @@ namespace second_display_media_control
                 stopButton.Enabled = true;
                 listItem.Selected = true;
                 listItem.EnsureVisible();
+                UpdateNavigationButtonsState();
             }
             else
             {
@@ -235,6 +246,7 @@ namespace second_display_media_control
                 BackgroundImagePath = backgroundImagePath
             };
             AddFileToPlaylist(item); // calls the existing method that takes PlaylistItem
+            UpdateNavigationButtonsState();
         }
         private void AddFileToPlaylist(PlaylistItem item)
         {
@@ -359,6 +371,7 @@ namespace second_display_media_control
             pauseButton.Enabled = false;
             stopButton.Enabled = false;
             currentPlayingIndex = -1;
+            UpdateNavigationButtonsState();
         }
 
         private void stopButton_Click(object sender, EventArgs e)
@@ -504,7 +517,7 @@ namespace second_display_media_control
                 if (project != null)
                 {
                     LoadProjectData(project);
-                    MessageBox.Show("Project loaded successfully!", "Success",
+                    MessageBox.Show("Project loaded successfully!", "Success",//must translate
                         MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
@@ -522,6 +535,7 @@ namespace second_display_media_control
                 StopBoth();
                 currentPlayingIndex = -1;
                 currentPlayingUri = "";
+                UpdateNavigationButtonsState();
             }
         }
 
@@ -574,7 +588,7 @@ namespace second_display_media_control
 
             if (project.SecondScreenEnabled && !fullScreenForm.Visible)
                 secondScreenButton.Checked = true; // вызовет secondScreenButton_Click
-
+            UpdateNavigationButtonsState();
             if (!string.IsNullOrEmpty(project.CurrentPlayingUri) && File.Exists(project.CurrentPlayingUri))
             {
                 int index = project.CurrentPlayingIndex;
@@ -598,6 +612,7 @@ namespace second_display_media_control
                 if (currentIndex > 0)
                 {
                     listView1.Items.RemoveAt(currentIndex);
+                    UpdateNavigationButtonsState();
                     listView1.Items.Insert(currentIndex - 1, selectedItem);
                     selectedItem.Selected = true;
 
@@ -807,7 +822,7 @@ namespace second_display_media_control
                     item.Selected = true;
                 }
                 UpdateCurrentPlayingIndexAfterReorder(originalIndices, targetIndex, removedCount);
-
+                UpdateNavigationButtonsState();
                 listView1.Refresh();
             }
             //EXTERNAL FILE DROP
@@ -964,6 +979,46 @@ namespace second_display_media_control
                 // Логирование при необходимости
                 Console.WriteLine($"Ошибка обновления миниатюры: {ex.Message}");
             }
+        }
+        private void PlayNextTrack()
+        {
+            if (listView1.Items.Count == 0) return;
+            int newIndex = currentPlayingIndex + 1;
+            if (newIndex >= listView1.Items.Count) newIndex = 0;
+            PlaySelectedFile(listView1.Items[newIndex]);
+        }
+
+        private void PlayPreviousTrack()
+        {
+            if (listView1.Items.Count == 0) return;
+            int newIndex = currentPlayingIndex - 1;
+            if (newIndex < 0) newIndex = listView1.Items.Count - 1;
+            PlaySelectedFile(listView1.Items[newIndex]);
+        }
+
+        private void UpdateNavigationButtonsState()
+        {
+            bool hasItems = listView1.Items.Count > 0;
+            if (hasItems)
+            {
+                prevButton.Enabled = currentPlayingIndex > 0;
+                nextButton.Enabled = currentPlayingIndex < listView1.Items.Count - 1;
+            }
+            else
+            {
+                prevButton.Enabled = false;
+                nextButton.Enabled = false;
+            }
+        }
+
+        private void nextButton_Click(object sender, EventArgs e)
+        {
+            PlayNextTrack();
+        }
+
+        private void prevButton_Click(object sender, EventArgs e)
+        {
+            PlayPreviousTrack();
         }
     }
 }
