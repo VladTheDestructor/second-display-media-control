@@ -11,7 +11,6 @@ namespace second_display_media_control
         private VlcControl vlcPlayer;
         private MainWindow mainWindow;
         private string currentUri = "";
-        private bool isPaused = false;
 
         public FullScreenForm(MainWindow mainWindow)
         {
@@ -52,11 +51,9 @@ namespace second_display_media_control
         {
             if (vlcPlayer != null)
             {
-                if (currentUri != uri || !vlcPlayer.IsPlaying || isPaused)
+                if (currentUri != uri || !vlcPlayer.IsPlaying)
                 {
                     currentUri = uri;
-                    isPaused = false;
-
                     if (vlcPlayer.IsPlaying) vlcPlayer.Stop();
                     System.Threading.Thread.Sleep(50);
 
@@ -112,27 +109,15 @@ namespace second_display_media_control
         {
             if (vlcPlayer != null && !string.IsNullOrEmpty(currentUri))
             {
-                if (isPaused)
-                {
-                    // Возобновляем если было на паузе
+                if (!vlcPlayer.IsPlaying)
                     vlcPlayer.Play();
-                    isPaused = false;
-                }
-                else if (!vlcPlayer.IsPlaying)
-                {
-                    // Запускаем заново если остановлено
-                    vlcPlayer.Play(new Uri(currentUri));
-                }
             }
         }
 
         public void Pause()
         {
             if (vlcPlayer != null && vlcPlayer.IsPlaying)
-            {
                 vlcPlayer.Pause();
-                isPaused = true;
-            }
         }
 
         public void SetVolume(int volume)
@@ -151,36 +136,10 @@ namespace second_display_media_control
             {
                 vlcPlayer.Stop();
                 currentUri = "";
-                isPaused = false;
             }
         }
 
         public bool IsPlaying => vlcPlayer?.IsPlaying ?? false;
-
-        public void SyncWithMain(bool isPlaying, long time)
-        {
-            if (this.InvokeRequired)
-            {
-                this.Invoke(new Action(() => SyncWithMain(isPlaying, time)));
-                return;
-            }
-
-            if (vlcPlayer != null && isPlaying && this.Visible)
-            {
-                // Синхронизируем позицию если расхождение больше 1 секунды
-                long currentTime = vlcPlayer.Time;
-                if (Math.Abs(currentTime - time) > 1000) // 1 секунда
-                {
-                    vlcPlayer.Time = time;
-                }
-
-                // Синхронизируем состояние воспроизведения
-                if (!vlcPlayer.IsPlaying && !isPaused)
-                {
-                    vlcPlayer.Play();
-                }
-            }
-        }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {

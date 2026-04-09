@@ -4,7 +4,6 @@ using System.Windows.Forms;
 using Vlc.DotNet.Core;
 using Vlc.DotNet.Forms;
 using System.Threading.Tasks;
-using System.Timers;
 using second_display_media_control;
 using System.Collections.Generic;
 using System.Drawing;
@@ -20,7 +19,7 @@ namespace second_display_media_control
         private int currentPlayingIndex = -1;
         private string currentPlayingUri = "";
         private bool isPlaying = false;
-        private System.Timers.Timer syncTimer;
+
 
         public MainWindow()
         {
@@ -40,9 +39,11 @@ namespace second_display_media_control
             listView1.SmallImageList = imageList1;
             listView1.MouseDoubleClick += ListView1_MouseDoubleClick;
             listView1.MouseClick += listView1_MouseClick;
+            listView1.MultiSelect = false;
+            listView1.HideSelection = false; // FIX: показывать выделение даже без фокуса
             InitializeVlcPlayer();
             InitializeButtons();
-            InitializeSyncTimer();
+
 
             fullScreenForm = new FullScreenForm(this);
             fullScreenForm.SetMainWindow(this);
@@ -66,22 +67,6 @@ namespace second_display_media_control
         }
 
 
-        private void InitializeSyncTimer()
-        {
-            syncTimer = new System.Timers.Timer(1000);
-            syncTimer.Elapsed += SyncTimer_Elapsed;
-            syncTimer.AutoReset = true;
-            syncTimer.Enabled = false;
-        }
-
-        private void SyncTimer_Elapsed(object sender, ElapsedEventArgs e)
-        {
-            if (isPlaying && vlcPlayer != null && vlcPlayer.IsPlaying)
-            {
-                // Синхронизация состояния и позиции
-                fullScreenForm?.SyncWithMain(vlcPlayer.IsPlaying, vlcPlayer.Time);
-            }
-        }
 
         private void InitializeVlcPlayer()
         {
@@ -177,7 +162,7 @@ namespace second_display_media_control
                 UpdateNavigationButtonsState();
             }
         }
-
+        private bool isSwitching = false;
         private void ListView1_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             var hitInfo = listView1.HitTest(e.Location);
@@ -187,42 +172,61 @@ namespace second_display_media_control
             }
         }
 
+        private void PlayByIndex(int index)
+        {
+            if (index < 0 || index >= listView1.Items.Count) return;
+            foreach (ListViewItem item in listView1.Items)
+                item.Selected = false;
+
+            ListViewItem targetItem = listView1.Items[index];
+            targetItem.Selected = true;
+            targetItem.EnsureVisible();
+            // Устанавливаем фокус на ListView и на элемент, чтобы показать пунктирную рамку
+            listView1.Focus();
+            targetItem.Focused = true;
+            PlaySelectedFile(targetItem);
+        }
+
         public void PlaySelectedFile(ListViewItem listItem)
         {
-            var playlistItem = (PlaylistItem)listItem.Tag;
-            string filePath = playlistItem.FilePath;
-            if (File.Exists(filePath))
+            isSwitching = true;
+            try
             {
-                currentPlayingUri = filePath;
-                currentPlayingIndex = listItem.Index;
-
-                // Останавливаем текущее воспроизведение
-                if (vlcPlayer.IsPlaying) vlcPlayer.Stop();
-                System.Threading.Thread.Sleep(100);
-
-                // Воспроизведение на главном плеере (без звука)
-                vlcPlayer.Play(new Uri(filePath), ":no-audio", ":audio-track-id=-1");
-                vlcPlayer.Audio.IsMute = true;
-
-                // Воспроизведение на втором экране с передачей фонового изображения
-                if (fullScreenForm != null && fullScreenForm.Visible)
+                var playlistItem = (PlaylistItem)listItem.Tag;
+                string filePath = playlistItem.FilePath;
+                if (File.Exists(filePath))
                 {
-                    fullScreenForm.PlaySync(filePath, 50, playlistItem.BackgroundImagePath);
+                    currentPlayingUri = filePath;
+                    currentPlayingIndex = listItem.Index;
+
+                    if (vlcPlayer.IsPlaying) vlcPlayer.Stop();
+                    System.Threading.Thread.Sleep(100);
+
+                    vlcPlayer.Play(new Uri(filePath), ":no-audio", ":audio-track-id=-1");
+                    vlcPlayer.Audio.IsMute = true;
+
+                    if (fullScreenForm != null && fullScreenForm.Visible)
+                    {
+                        fullScreenForm.PlaySync(filePath, volumeTrackBar.Value, playlistItem.BackgroundImagePath);
+                    }
+
+                    isPlaying = true;
+                    playButton.Enabled = false;
+                    pauseButton.Enabled = true;
+                    stopButton.Enabled = true;
+                    listItem.Selected = true;
+                    listItem.Focused = true;
+                    listItem.EnsureVisible();
+                    UpdateNavigationButtonsState();
                 }
-
-                isPlaying = true;
-                syncTimer.Enabled = true;
-
-                playButton.Enabled = false;
-                pauseButton.Enabled = true;
-                stopButton.Enabled = true;
-                listItem.Selected = true;
-                listItem.EnsureVisible();
-                UpdateNavigationButtonsState();
+                else
+                {
+                    MessageBox.Show($"Файл не найден:\n{filePath}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
             }
-            else
+            finally
             {
-                MessageBox.Show($"Файл не найден:\n{filePath}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                Task.Delay(500).ContinueWith(_ => { isSwitching = false; });
             }
         }
 
@@ -278,8 +282,6 @@ namespace second_display_media_control
         private void listView1_SelectedIndexChanged_1(object sender, EventArgs e) { }
         private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
         {
-            syncTimer?.Stop();
-            syncTimer?.Dispose();
             vlcPlayer?.Dispose();
         }
         private void MainWindow_FormClosing_1(object sender, FormClosingEventArgs e) { }
@@ -310,13 +312,11 @@ namespace second_display_media_control
                 }
                 else if (listView1.Items.Count > 0)
                 {
-                    listView1.Items[0].Selected = true;
-                    PlaySelectedFile(listView1.Items[0]);
+                    PlayByIndex(0);
                 }
             }
 
             isPlaying = true;
-            syncTimer.Enabled = true;
             playButton.Enabled = false;
             pauseButton.Enabled = true;
             stopButton.Enabled = true;
@@ -342,7 +342,6 @@ namespace second_display_media_control
             }
 
             isPlaying = false;
-            syncTimer.Enabled = false;
             playButton.Enabled = true;
             pauseButton.Enabled = false;
             stopButton.Enabled = true;
@@ -365,7 +364,6 @@ namespace second_display_media_control
             }
 
             isPlaying = false;
-            syncTimer.Enabled = false;
             currentPlayingUri = "";
             playButton.Enabled = true;
             pauseButton.Enabled = false;
@@ -420,6 +418,8 @@ namespace second_display_media_control
 
         private async void VlcPlayer_EndReached(object sender, VlcMediaPlayerEndReachedEventArgs e)
         {
+            if (isSwitching) return; // Игнорируем событие во время переключения
+
             if (this.InvokeRequired)
             {
                 this.Invoke(new Action(() => VlcPlayer_EndReached(sender, e)));
@@ -442,14 +442,12 @@ namespace second_display_media_control
                     {
                         currentPlayingIndex = -1;
                         isPlaying = false;
-                        syncTimer.Enabled = false;
                     }
                 }
                 else
                 {
                     currentPlayingIndex = -1;
                     isPlaying = false;
-                    syncTimer.Enabled = false;
                 }
             }
             catch (Exception ex)
@@ -457,7 +455,6 @@ namespace second_display_media_control
                 MessageBox.Show($"Ошибка автовоспроизведения: {ex.Message}");
                 currentPlayingIndex = -1;
                 isPlaying = false;
-                syncTimer.Enabled = false;
             }
         }
 
@@ -498,7 +495,7 @@ namespace second_display_media_control
 
                 if (ProjectManager.SaveProject(saveDialog.FileName, project))
                 {
-                    MessageBox.Show("Project saved successfully!", "Success",
+                    MessageBox.Show("Проект сохранен!", "Успех",
                         MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
@@ -517,7 +514,7 @@ namespace second_display_media_control
                 if (project != null)
                 {
                     LoadProjectData(project);
-                    MessageBox.Show("Project loaded successfully!", "Success",//must translate
+                    MessageBox.Show("Проект загружен!", "Успех",
                         MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
@@ -525,8 +522,8 @@ namespace second_display_media_control
 
         private void newProjectToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var result = MessageBox.Show("Create new project? Current playlist will be cleared.",
-                "New Project", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            var result = MessageBox.Show("Создать новый проект? Все несохраненные изменения будут удалены, плейлист будет очищен.",
+                "Новый проект", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
             if (result == DialogResult.Yes)
             {
@@ -594,8 +591,7 @@ namespace second_display_media_control
                 int index = project.CurrentPlayingIndex;
                 if (index >= 0 && index < listView1.Items.Count)
                 {
-                    listView1.Items[index].Selected = true;
-                    PlaySelectedFile(listView1.Items[index]);
+                    PlayByIndex(index);
                 }
             }
             // восстановление остальных настроек...
@@ -980,20 +976,43 @@ namespace second_display_media_control
                 Console.WriteLine($"Ошибка обновления миниатюры: {ex.Message}");
             }
         }
+
+        // FIX: Полностью переписанные методы Next/Prev — теперь они работают как автовоспроизведение
         private void PlayNextTrack()
         {
             if (listView1.Items.Count == 0) return;
-            int newIndex = currentPlayingIndex + 1;
-            if (newIndex >= listView1.Items.Count) newIndex = 0;
-            PlaySelectedFile(listView1.Items[newIndex]);
+            if (currentPlayingIndex < 0 || currentPlayingIndex >= listView1.Items.Count)
+            {
+                // Некорректный индекс – начинаем с первого
+                if (listView1.Items.Count > 0)
+                    PlaySelectedFile(listView1.Items[0]);
+                return;
+            }
+            int nextIndex = currentPlayingIndex + 1;
+            if (nextIndex < listView1.Items.Count)
+            {
+                ListViewItem nextItem = listView1.Items[nextIndex];
+                PlaySelectedFile(nextItem);
+            }
+            // Не зацикливаем – просто ничего не делаем (как в автовоспроизведении)
         }
 
         private void PlayPreviousTrack()
         {
             if (listView1.Items.Count == 0) return;
-            int newIndex = currentPlayingIndex - 1;
-            if (newIndex < 0) newIndex = listView1.Items.Count - 1;
-            PlaySelectedFile(listView1.Items[newIndex]);
+            if (currentPlayingIndex < 0 || currentPlayingIndex >= listView1.Items.Count)
+            {
+                if (listView1.Items.Count > 0)
+                    PlaySelectedFile(listView1.Items[0]);
+                return;
+            }
+            int prevIndex = currentPlayingIndex - 1;
+            if (prevIndex >= 0)
+            {
+                ListViewItem prevItem = listView1.Items[prevIndex];
+                PlaySelectedFile(prevItem);
+            }
+            // Не зацикливаем
         }
 
         private void UpdateNavigationButtonsState()
