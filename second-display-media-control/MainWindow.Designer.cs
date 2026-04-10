@@ -29,8 +29,9 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
             toolStrip1 = new ToolStrip();
+            prevButton = new ToolStripButton();
+            nextButton = new ToolStripButton();
             playButton = new ToolStripButton();
             pauseButton = new ToolStripButton();
             stopButton = new ToolStripButton();
@@ -44,7 +45,6 @@
             importMediaToolStripMenuItem = new ToolStripMenuItem();
             importFolderToolStripMenuItem = new ToolStripMenuItem();
             viewToolStripMenuItem = new ToolStripMenuItem();
-            secondDisplayWidowtempToolStripMenuItem = new ToolStripMenuItem();
             AddMediaDialog = new OpenFileDialog();
             listView1 = new ListView();
             imageList1 = new ImageList(components);
@@ -58,8 +58,6 @@
             label1 = new Label();
             volumeTrackBar = new TrackBar();
             volumeLabel = new Label();
-            prevButton = new ToolStripButton();
-            nextButton = new ToolStripButton();
             toolStrip1.SuspendLayout();
             menuStrip1.SuspendLayout();
             FileFromListContextMenu.SuspendLayout();
@@ -75,6 +73,26 @@
             toolStrip1.Size = new Size(204, 25);
             toolStrip1.TabIndex = 2;
             toolStrip1.Text = "toolStrip1";
+            // 
+            // prevButton
+            // 
+            prevButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            prevButton.Image = Properties.Resources.back;
+            prevButton.ImageTransparentColor = Color.Magenta;
+            prevButton.Name = "prevButton";
+            prevButton.Size = new Size(23, 22);
+            prevButton.Text = "prevButton";
+            prevButton.Click += prevButton_Click;
+            // 
+            // nextButton
+            // 
+            nextButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            nextButton.Image = Properties.Resources.forward;
+            nextButton.ImageTransparentColor = Color.Magenta;
+            nextButton.Name = "nextButton";
+            nextButton.Size = new Size(23, 22);
+            nextButton.Text = "nextButton";
+            nextButton.Click += nextButton_Click;
             // 
             // playButton
             // 
@@ -182,16 +200,9 @@
             // 
             // viewToolStripMenuItem
             // 
-            viewToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { secondDisplayWidowtempToolStripMenuItem });
             viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             viewToolStripMenuItem.Size = new Size(39, 20);
             viewToolStripMenuItem.Text = "Вид";
-            // 
-            // secondDisplayWidowtempToolStripMenuItem
-            // 
-            secondDisplayWidowtempToolStripMenuItem.Name = "secondDisplayWidowtempToolStripMenuItem";
-            secondDisplayWidowtempToolStripMenuItem.Size = new Size(227, 22);
-            secondDisplayWidowtempToolStripMenuItem.Text = "Second display widow(temp)";
             // 
             // AddMediaDialog
             // 
@@ -287,26 +298,6 @@
             volumeLabel.TabIndex = 8;
             volumeLabel.Text = "0";
             // 
-            // prevButton
-            // 
-            prevButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
-            prevButton.Image = (Image)resources.GetObject("prevButton.Image");
-            prevButton.ImageTransparentColor = Color.Magenta;
-            prevButton.Name = "prevButton";
-            prevButton.Size = new Size(23, 22);
-            prevButton.Text = "prevButton";
-            prevButton.Click += prevButton_Click;
-            // 
-            // nextButton
-            // 
-            nextButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
-            nextButton.Image = (Image)resources.GetObject("nextButton.Image");
-            nextButton.ImageTransparentColor = Color.Magenta;
-            nextButton.Name = "nextButton";
-            nextButton.Size = new Size(23, 22);
-            nextButton.Text = "nextButton";
-            nextButton.Click += nextButton_Click;
-            // 
             // MainWindow
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -345,7 +336,6 @@
         private ToolStripMenuItem importMediaToolStripMenuItem;
         private ToolStripMenuItem importFolderToolStripMenuItem;
         private ToolStripMenuItem viewToolStripMenuItem;
-        private ToolStripMenuItem secondDisplayWidowtempToolStripMenuItem;
         private OpenFileDialog AddMediaDialog;
         private ListView listView1;
         private ImageList imageList1;
