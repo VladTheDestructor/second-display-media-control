@@ -2,15 +2,8 @@
 {
     partial class MainWindow
     {
-        /// <summary>
-        ///  Required designer variable.
-        /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        ///  Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
@@ -20,12 +13,6 @@
             base.Dispose(disposing);
         }
 
-        #region Windows Form Designer generated code
-
-        /// <summary>
-        ///  Required method for Designer support - do not modify
-        ///  the contents of this method with the code editor.
-        /// </summary>
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
@@ -58,19 +45,23 @@
             label1 = new Label();
             volumeTrackBar = new TrackBar();
             volumeLabel = new Label();
+            panel1 = new Panel();
             toolStrip1.SuspendLayout();
             menuStrip1.SuspendLayout();
             FileFromListContextMenu.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)volumeTrackBar).BeginInit();
+            panel1.SuspendLayout();
             SuspendLayout();
             // 
             // toolStrip1
             // 
-            toolStrip1.Dock = DockStyle.None;
+            toolStrip1.BackColor = Color.FromArgb(45, 45, 48);
+            toolStrip1.ForeColor = Color.White;
+            toolStrip1.GripStyle = ToolStripGripStyle.Hidden;
             toolStrip1.Items.AddRange(new ToolStripItem[] { prevButton, nextButton, playButton, pauseButton, stopButton, autoplayButton, secondScreenButton });
-            toolStrip1.Location = new Point(743, 321);
+            toolStrip1.Location = new Point(0, 0);
             toolStrip1.Name = "toolStrip1";
-            toolStrip1.Size = new Size(204, 25);
+            toolStrip1.Size = new Size(464, 25);
             toolStrip1.TabIndex = 2;
             toolStrip1.Text = "toolStrip1";
             // 
@@ -148,6 +139,8 @@
             // 
             // menuStrip1
             // 
+            menuStrip1.BackColor = Color.FromArgb(45, 45, 48);
+            menuStrip1.ForeColor = Color.White;
             menuStrip1.Items.AddRange(new ToolStripItem[] { fileToolStripMenuItem, viewToolStripMenuItem });
             menuStrip1.Location = new Point(0, 0);
             menuStrip1.Name = "menuStrip1";
@@ -166,6 +159,8 @@
             // 
             // newProjectToolStripMenuItem
             // 
+            newProjectToolStripMenuItem.BackColor = Color.FromArgb(64, 64, 64);
+            newProjectToolStripMenuItem.ForeColor = Color.White;
             newProjectToolStripMenuItem.Name = "newProjectToolStripMenuItem";
             newProjectToolStripMenuItem.Size = new Size(174, 22);
             newProjectToolStripMenuItem.Text = "Новый проект";
@@ -173,6 +168,8 @@
             // 
             // openProjectToolStripMenuItem
             // 
+            openProjectToolStripMenuItem.BackColor = Color.FromArgb(64, 64, 64);
+            openProjectToolStripMenuItem.ForeColor = Color.White;
             openProjectToolStripMenuItem.Name = "openProjectToolStripMenuItem";
             openProjectToolStripMenuItem.Size = new Size(174, 22);
             openProjectToolStripMenuItem.Text = "Открыть проект";
@@ -180,6 +177,8 @@
             // 
             // saveProjectToolStripMenuItem
             // 
+            saveProjectToolStripMenuItem.BackColor = Color.FromArgb(64, 64, 64);
+            saveProjectToolStripMenuItem.ForeColor = Color.White;
             saveProjectToolStripMenuItem.Name = "saveProjectToolStripMenuItem";
             saveProjectToolStripMenuItem.Size = new Size(174, 22);
             saveProjectToolStripMenuItem.Text = "Сохранить проект";
@@ -187,6 +186,8 @@
             // 
             // importMediaToolStripMenuItem
             // 
+            importMediaToolStripMenuItem.BackColor = Color.FromArgb(64, 64, 64);
+            importMediaToolStripMenuItem.ForeColor = Color.White;
             importMediaToolStripMenuItem.Name = "importMediaToolStripMenuItem";
             importMediaToolStripMenuItem.Size = new Size(174, 22);
             importMediaToolStripMenuItem.Text = "Импорт медиа";
@@ -194,6 +195,8 @@
             // 
             // importFolderToolStripMenuItem
             // 
+            importFolderToolStripMenuItem.BackColor = Color.FromArgb(64, 64, 64);
+            importFolderToolStripMenuItem.ForeColor = Color.White;
             importFolderToolStripMenuItem.Name = "importFolderToolStripMenuItem";
             importFolderToolStripMenuItem.Size = new Size(174, 22);
             importFolderToolStripMenuItem.Text = "Импорт папки";
@@ -210,12 +213,19 @@
             // 
             // listView1
             // 
+            listView1.BackColor = Color.FromArgb(45, 45, 48);
+            listView1.BorderStyle = BorderStyle.None;
             listView1.Dock = DockStyle.Left;
+            listView1.Font = new Font("Segoe UI", 9F);
+            listView1.ForeColor = Color.White;
+            listView1.FullRowSelect = true;
             listView1.Location = new Point(0, 24);
             listView1.Name = "listView1";
+            listView1.OwnerDraw = true;
             listView1.Size = new Size(496, 611);
             listView1.TabIndex = 4;
             listView1.UseCompatibleStateImageBehavior = false;
+            listView1.View = View.Details;
             listView1.MouseDoubleClick += ListView1_MouseDoubleClick;
             // 
             // imageList1
@@ -226,6 +236,8 @@
             // 
             // FileFromListContextMenu
             // 
+            FileFromListContextMenu.BackColor = Color.FromArgb(45, 45, 48);
+            FileFromListContextMenu.ForeColor = Color.White;
             FileFromListContextMenu.Items.AddRange(new ToolStripItem[] { moveUpToolStripMenuItem, moveDownToolStripMenuItem, selectBackgroundImageToolStripMenuItem, removeBackgroundImageToolStripMenuItem, removeFromPlaylistToolStripMenuItem });
             FileFromListContextMenu.Name = "contextMenuStrip1";
             FileFromListContextMenu.Size = new Size(256, 114);
@@ -249,12 +261,14 @@
             selectBackgroundImageToolStripMenuItem.Name = "selectBackgroundImageToolStripMenuItem";
             selectBackgroundImageToolStripMenuItem.Size = new Size(255, 22);
             selectBackgroundImageToolStripMenuItem.Text = "Добавить фоновое изображение";
+            selectBackgroundImageToolStripMenuItem.Click += selectBackgroundImageToolStripMenuItem_Click;
             // 
             // removeBackgroundImageToolStripMenuItem
             // 
             removeBackgroundImageToolStripMenuItem.Name = "removeBackgroundImageToolStripMenuItem";
             removeBackgroundImageToolStripMenuItem.Size = new Size(255, 22);
             removeBackgroundImageToolStripMenuItem.Text = "Удалить изображение";
+            removeBackgroundImageToolStripMenuItem.Click += removeBackgroundImageToolStripMenuItem_Click;
             // 
             // removeFromPlaylistToolStripMenuItem
             // 
@@ -265,6 +279,7 @@
             // 
             // videoPanel
             // 
+            videoPanel.BackColor = Color.FromArgb(30, 30, 30);
             videoPanel.Dock = DockStyle.Top;
             videoPanel.Location = new Point(496, 24);
             videoPanel.Name = "videoPanel";
@@ -274,42 +289,68 @@
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(916, 374);
+            label1.Dock = DockStyle.Right;
+            label1.ForeColor = Color.White;
+            label1.Location = new Point(464, 0);
+            label1.MaximumSize = new Size(80, 40);
             label1.Name = "label1";
+            label1.RightToLeft = RightToLeft.No;
             label1.Size = new Size(66, 15);
             label1.TabIndex = 6;
             label1.Text = "Громкость";
+            label1.Click += label1_Click;
             // 
             // volumeTrackBar
             // 
-            volumeTrackBar.Location = new Point(984, 370);
+            volumeTrackBar.BackColor = Color.FromArgb(30, 30, 30);
+            volumeTrackBar.Dock = DockStyle.Right;
+            volumeTrackBar.Location = new Point(530, 0);
             volumeTrackBar.Maximum = 100;
+            volumeTrackBar.MaximumSize = new Size(80, 30);
             volumeTrackBar.Name = "volumeTrackBar";
-            volumeTrackBar.Size = new Size(104, 45);
+            volumeTrackBar.RightToLeft = RightToLeft.No;
+            volumeTrackBar.Size = new Size(80, 30);
             volumeTrackBar.TabIndex = 7;
             volumeTrackBar.Scroll += volumeTrackBar_Scroll;
             // 
             // volumeLabel
             // 
             volumeLabel.AutoSize = true;
-            volumeLabel.Location = new Point(1078, 372);
+            volumeLabel.Dock = DockStyle.Right;
+            volumeLabel.ForeColor = Color.White;
+            volumeLabel.Location = new Point(610, 0);
             volumeLabel.Name = "volumeLabel";
+            volumeLabel.RightToLeft = RightToLeft.No;
             volumeLabel.Size = new Size(13, 15);
             volumeLabel.TabIndex = 8;
             volumeLabel.Text = "0";
+            volumeLabel.Click += volumeLabel_Click;
+            // 
+            // panel1
+            // 
+            panel1.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            panel1.Controls.Add(toolStrip1);
+            panel1.Controls.Add(label1);
+            panel1.Controls.Add(volumeTrackBar);
+            panel1.Controls.Add(volumeLabel);
+            panel1.Location = new Point(496, 324);
+            panel1.MinimumSize = new Size(0, 311);
+            panel1.Name = "panel1";
+            panel1.Size = new Size(623, 311);
+            panel1.TabIndex = 9;
+            panel1.Paint += panel1_Paint;
             // 
             // MainWindow
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
+            BackColor = Color.FromArgb(25, 25, 28);
             ClientSize = new Size(1119, 635);
-            Controls.Add(volumeLabel);
-            Controls.Add(volumeTrackBar);
-            Controls.Add(label1);
+            Controls.Add(panel1);
             Controls.Add(videoPanel);
             Controls.Add(listView1);
-            Controls.Add(toolStrip1);
             Controls.Add(menuStrip1);
+            ForeColor = Color.White;
             MainMenuStrip = menuStrip1;
             Name = "MainWindow";
             Text = "SDMC-Live";
@@ -319,11 +360,12 @@
             menuStrip1.PerformLayout();
             FileFromListContextMenu.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)volumeTrackBar).EndInit();
+            panel1.ResumeLayout(false);
+            panel1.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
 
-        #endregion
         private ToolStrip toolStrip1;
         private ToolStripButton playButton;
         private ToolStripButton pauseButton;
@@ -353,5 +395,6 @@
         private ToolStripMenuItem removeBackgroundImageToolStripMenuItem;
         private ToolStripButton prevButton;
         private ToolStripButton nextButton;
+        private Panel panel1;
     }
 }

@@ -24,6 +24,22 @@ namespace second_display_media_control
         public MainWindow()
         {
             InitializeComponent();
+
+            // --- Remove toolstrip border and apply dark theme ---
+            var darkRenderer = new DarkToolStripRenderer();
+            toolStrip1.Renderer = darkRenderer;
+            menuStrip1.Renderer = darkRenderer;
+            FileFromListContextMenu.Renderer = darkRenderer;
+
+            // Ensure no extra space around the toolstrip
+            toolStrip1.Padding = new Padding(0);
+            toolStrip1.Margin = new Padding(0);
+
+            // --- Fix ListView column headers: owner draw dark headers ---
+            listView1.DrawColumnHeader += ListView1_DrawColumnHeader;
+            listView1.DrawSubItem += ListView1_DrawSubItem;
+            listView1.DrawItem += ListView1_DrawItem;
+
             listView1.View = View.Details;
             listView1.FullRowSelect = true;
             listView1.AllowDrop = true;
@@ -40,7 +56,7 @@ namespace second_display_media_control
             listView1.MouseDoubleClick += ListView1_MouseDoubleClick;
             listView1.MouseClick += listView1_MouseClick;
             listView1.MultiSelect = false;
-            listView1.HideSelection = false; // FIX: показывать выделение даже без фокуса
+            listView1.HideSelection = false;
             InitializeVlcPlayer();
             InitializeButtons();
 
@@ -66,8 +82,62 @@ namespace second_display_media_control
             removeBackgroundImageToolStripMenuItem.Click += removeBackgroundImageToolStripMenuItem_Click;
         }
 
+        // --- Custom renderer that suppresses the toolstrip border ---
+        private class DarkToolStripRenderer : ToolStripProfessionalRenderer
+        {
+            public DarkToolStripRenderer() : base(new DarkColorTable()) { }
 
+            protected override void OnRenderToolStripBorder(ToolStripRenderEventArgs e)
+            {
+                // Do nothing – removes the border
+            }
+        }
 
+        // --- Dark color table for toolstrip, menu, context menu ---
+        private class DarkColorTable : ProfessionalColorTable
+        {
+            public override Color MenuItemSelected => Color.FromArgb(62, 62, 64);
+            public override Color MenuItemBorder => Color.FromArgb(62, 62, 64);
+            public override Color MenuItemPressedGradientBegin => Color.FromArgb(62, 62, 64);
+            public override Color MenuItemPressedGradientEnd => Color.FromArgb(62, 62, 64);
+            public override Color MenuStripGradientBegin => Color.FromArgb(45, 45, 48);
+            public override Color MenuStripGradientEnd => Color.FromArgb(45, 45, 48);
+            public override Color ToolStripDropDownBackground => Color.FromArgb(45, 45, 48);
+            public override Color ImageMarginGradientBegin => Color.FromArgb(45, 45, 48);
+            public override Color ImageMarginGradientMiddle => Color.FromArgb(45, 45, 48);
+            public override Color ImageMarginGradientEnd => Color.FromArgb(45, 45, 48);
+            public override Color ButtonCheckedGradientBegin => Color.FromArgb(62, 62, 64);
+            public override Color ButtonCheckedGradientMiddle => Color.FromArgb(62, 62, 64);
+            public override Color ButtonCheckedGradientEnd => Color.FromArgb(62, 62, 64);
+            public override Color ButtonSelectedBorder => Color.FromArgb(62, 62, 64);
+            public override Color ButtonSelectedGradientBegin => Color.FromArgb(62, 62, 64);
+            public override Color ButtonSelectedGradientMiddle => Color.FromArgb(62, 62, 64);
+            public override Color ButtonSelectedGradientEnd => Color.FromArgb(62, 62, 64);
+            public override Color ButtonPressedGradientBegin => Color.FromArgb(62, 62, 64);
+            public override Color ButtonPressedGradientMiddle => Color.FromArgb(62, 62, 64);
+            public override Color ButtonPressedGradientEnd => Color.FromArgb(62, 62, 64);
+        }
+
+        // --- Owner draw for ListView headers and items ---
+        private void ListView1_DrawColumnHeader(object sender, DrawListViewColumnHeaderEventArgs e)
+        {
+            e.Graphics.FillRectangle(new SolidBrush(Color.FromArgb(45, 45, 48)), e.Bounds);
+            e.Graphics.DrawString(e.Header.Text, listView1.Font, Brushes.White, e.Bounds.X + 2, e.Bounds.Y + 2);
+        }
+
+        private void ListView1_DrawSubItem(object sender, DrawListViewSubItemEventArgs e)
+        {
+            e.Graphics.FillRectangle(new SolidBrush(Color.FromArgb(45, 45, 48)), e.Bounds);
+            e.Graphics.DrawString(e.SubItem.Text, listView1.Font, Brushes.White, e.Bounds.X + 2, e.Bounds.Y + 2);
+        }
+
+        private void ListView1_DrawItem(object sender, DrawListViewItemEventArgs e)
+        {
+            e.DrawBackground();
+            e.DrawDefault = false; // we draw subitems manually via DrawSubItem
+        }
+
+        // --- The rest of the code is exactly as originally written, no changes below ---
         private void InitializeVlcPlayer()
         {
             try
@@ -1038,6 +1108,22 @@ namespace second_display_media_control
         private void prevButton_Click(object sender, EventArgs e)
         {
             PlayPreviousTrack();
+        }
+
+        private void volumeLabel_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        // ====== ДОБАВЛЕННЫЕ ОБРАБОТЧИКИ ДЛЯ ИСПРАВЛЕНИЯ ОШИБОК ДИЗАЙНЕРА ======
+        private void label1_Click(object sender, EventArgs e)
+        {
+            // Пустой обработчик для события Click label1
+        }
+
+        private void panel1_Paint(object sender, PaintEventArgs e)
+        {
+            // Пустой обработчик для события Paint panel1
         }
     }
 }
